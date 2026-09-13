@@ -1,0 +1,28 @@
+# Dependencies and build output
+node_modules/
+dist/
+.vite/
+coverage/
+*.log
+
+# Local environment and secrets
+.env
+.env.convex
+.env.*
+!.env.example
+
+# Convex generated output and local metadata
+convex/_generated/
+.convex/
+
+# Operating system and editor noise
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+
+# Local builder metadata
+.agents/
+.claude/
