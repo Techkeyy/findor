@@ -75,3 +75,23 @@ Added the generic inbound-reply foundation: a signed Convex HTTP Action for Agen
 Added owner-controlled pause, resume, cancel, and completion states with server-side ownership checks, auditable events, and active-operation locks for provider search, bounded contact discovery, and outreach send (convex/schema.ts, convex/jobs.ts, convex/providerResearch.ts, convex/outreach.ts). The UI now explains paused and closed requests, blocks send controls outside the explicit approval state, and lets a user start a new request after completion or cancellation (src/App.tsx, src/index.css).
 
 Local evidence is green: typecheck, lint, production frontend build, and 11 deterministic Convex safety tests pass across two test files. The dev push was attempted twice but the Convex authorization/network fetch timed out before deployment; the public app remains not deployed. The optional OpenAI interpreter is not treated as a release gate. No new external email, reply, credential, or private application record is claimed in this milestone.
+### 2026-09-13 — production release package
+
+The authorized production release package completed. The public frontend is live at
+https://laudable-fly-396.convex.site and the public source repository is
+https://github.com/Techkeyy/findor. Production environment names were verified
+without exposing values. Exactly one enabled AgentMail message.received webhook
+was migrated to the production endpoint without leaving duplicates, and an
+unsigned production webhook POST returned 401. Fresh public-UI UAT covered
+authenticated generic Moving intake, a real Firecrawl search, bounded contact
+discovery, source-backed public-email evidence, truthful non-email blocking, and
+pause/resume/cancel recovery controls. The cancellation UAT required an
+in-product confirmation boundary, which was deployed and then passed end to end.
+
+The final staged-tree scan found zero secret/private-pattern matches, zero local
+development URL matches, zero staged environment files other than the
+name-only .env.example, and no local builder metadata. Local typecheck, lint,
+11 deterministic tests, and production build all passed. No new provider email,
+follow-up, clarification, booking, payment, quote acceptance, social post, or
+hackathon submission occurred. Day 2 remains waiting for a genuine external
+provider reply; no reply is fabricated or claimed. Stop here for director review.
