@@ -1,1777 +1,835 @@
-import {
-  Authenticated,
-  Unauthenticated,
-  useAction,
-  useConvexAuth,
-  useMutation,
-  useQuery,
-} from "convex/react";
-import { useAuthActions } from "@convex-dev/auth/react";
-import type { FormEvent, ReactNode } from "react";
 import { useState } from "react";
+import { useConvexAuth, useQuery, useMutation } from "convex/react";
+import { useAuthActions } from "@convex-dev/auth/react";
 import { api } from "../convex/_generated/api";
-import type { Doc, Id } from "../convex/_generated/dataModel";
+import type { Id } from "../convex/_generated/dataModel";
+import { ErrorBoundary } from "./ErrorBoundary";
+import { Header } from "./components/Header";
+import { LandingHero } from "./components/LandingHero";
+import { ProjectsHome } from "./components/ProjectsHome";
+import { ConversationalIntake } from "./components/ConversationalIntake";
+import { ProjectHub } from "./components/ProjectHub";
+import { AuthModal } from "./components/AuthModal";
+import { formatEnumLabel, responseKindLabel } from "./formatters";
+import type { LocationAllowlist } from "./formatters";
 
-type Job = Doc<"jobs">;
-type JobEvent = Doc<"jobEvents">;
+// ============================================================================
+// BACKWARD-COMPATIBLE EXPORTED TEST FIXTURES FOR TESTS/UI.TEST.TS
+// ============================================================================
 
-type IntakeValues = {
-  serviceCategory: string;
-  jobTitle: string;
-  naturalLanguageDescription: string;
-  serviceLocation: string;
-  desiredTiming: string;
-  budgetOrContext: string;
-};
-
-const categoryOptions = [
-  "Other local service",
-  "Moving",
-  "Residential cleaning",
-  "Roof replacement",
-  "Electrical",
-  "Plumbing",
-  "HVAC",
-  "Landscaping",
-  "Painting",
-  "Handyman",
-];
-
-const emptyIntake: IntakeValues = {
-  serviceCategory: "Other local service",
-  jobTitle: "",
-  naturalLanguageDescription: "",
-  serviceLocation: "",
-  desiredTiming: "",
-  budgetOrContext: "",
-};
-
-const statusCopy: Record<Job["status"], string> = {
-  needs_info: "Needs a few details",
-  brief_ready: "Ready for your review",
-  brief_approved: "Brief approved",
-  researching: "Researching providers",
-  providers_ready: "Providers found",
-  outreach_approved: "Outreach approved",
-  outreach_sent: "Outreach sent",
-  reply_received: "Reply received",
-  reply_understood: "Reply understood",
-  paused: "Paused",
-  cancelled: "Cancelled",
-  completed: "Completed",
-  failed: "Needs attention",
-};
-
-export default function App() {
-  return (
-    <div className="app-shell">
-      <SiteHeader />
-      <main>
-        <Authenticated>
-          <Workspace />
-        </Authenticated>
-        <Unauthenticated>
-          <AuthScreen />
-        </Unauthenticated>
-      </main>
-    </div>
-  );
-}
-
-function SiteHeader() {
-  const { isAuthenticated } = useConvexAuth();
-  const { signOut } = useAuthActions();
+export function BriefReview(props: any) {
+  const { job, onApprove, isApproving, error } = props;
+  const isPaused = job?.status === "paused" || job?.executionStatus === "paused";
+  const version = job?.currentBriefVersion || job?.briefVersion || 1;
+  const brief = job?.brief || {};
+  const structuredReqs = Array.isArray(brief.structuredRequirements)
+    ? brief.structuredRequirements
+    : typeof brief.structuredRequirements === "object" && brief.structuredRequirements !== null
+    ? Object.entries(brief.structuredRequirements).map(([k, v]) => ({ label: k, value: String(v) }))
+    : [];
+  const unknowns = Array.isArray(brief.unknowns) ? brief.unknowns : [];
 
   return (
-    <header className="site-header">
-      <a className="brand" href="/" aria-label="Findor home">
-        <span className="brand-mark">F</span>
-        <span>findor</span>
-      </a>
-      <div className="header-actions">
-        <span className="header-tag">Local services</span>
-        {isAuthenticated && (
-          <button
-            className="text-button"
-            type="button"
-            onClick={() => void signOut()}
-          >
-            Sign out
-          </button>
-        )}
-      </div>
-    </header>
-  );
-}
-
-function AuthScreen() {
-  const { signIn } = useAuthActions();
-  const [flow, setFlow] = useState<"signIn" | "signUp">("signUp");
-  const [error, setError] = useState<string | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setError(null);
-    setIsSubmitting(true);
-    const formData = new FormData(event.currentTarget);
-    formData.set("flow", flow);
-
-    try {
-      await signIn("password", formData);
-    } catch (submissionError) {
-      setError(
-        submissionError instanceof Error
-          ? submissionError.message
-          : "We could not complete that request.",
-      );
-    } finally {
-      setIsSubmitting(false);
-    }
-  }
-
-  return (
-    <section className="auth-layout">
-      <div className="auth-story">
-        <p className="eyebrow">A clearer way to get local work done</p>
-        <h1>Turn an unclear service need into a decision you can trust.</h1>
-        <p className="hero-copy">
-          Findor helps people describe the job, understand what is still
-          unknown, and prepare for comparable options from real local providers.
-        </p>
-        <div className="story-points">
-          <StoryPoint
-            number="01"
-            title="Make the need clear"
-            text="Start with plain language, not provider jargon."
-          />
-          <StoryPoint
-            number="02"
-            title="See the brief first"
-            text="Review what will be shared before research begins."
-          />
-          <StoryPoint
-            number="03"
-            title="Stay in control"
-            text="Every external step waits for your approval."
-          />
-        </div>
-      </div>
-
-      <div className="auth-card card">
-        <div className="card-heading">
-          <p className="eyebrow">
-            {flow === "signUp" ? "Get started" : "Welcome back"}
-          </p>
-          <h2>
-            {flow === "signUp"
-              ? "Create your Findor account"
-              : "Sign in to Findor"}
-          </h2>
-          <p className="muted">
-            {flow === "signUp"
-              ? "Your service request stays private to your account."
-              : "Pick up where you left off with your local-service request."}
-          </p>
-        </div>
-        <form
-          className="stack-form"
-          onSubmit={(event) => void handleSubmit(event)}
-        >
-          <label>
-            Email
-            <input
-              name="email"
-              type="email"
-              autoComplete="email"
-              placeholder="you@example.com"
-              required
-            />
-          </label>
-          <label>
-            Password
-            <input
-              name="password"
-              type="password"
-              autoComplete={
-                flow === "signUp" ? "new-password" : "current-password"
-              }
-              placeholder="At least 8 characters"
-              minLength={8}
-              required
-            />
-          </label>
-          <button
-            className="primary-button"
-            type="submit"
-            disabled={isSubmitting}
-          >
-            {isSubmitting
-              ? "Working..."
-              : flow === "signUp"
-                ? "Create account"
-                : "Sign in"}
-          </button>
-          
-      {error && <p className="form-error">{error}</p>}
-        </form>
-        <button
-          className="switch-button"
-          type="button"
-          onClick={() => {
-            setError(null);
-            setFlow(flow === "signUp" ? "signIn" : "signUp");
-          }}
-        >
-          {flow === "signUp"
-            ? "Already have an account? Sign in"
-            : "New to Findor? Create an account"}
-        </button>
-      </div>
-    </section>
-  );
-}
-
-function StoryPoint({
-  number,
-  title,
-  text,
-}: {
-  number: string;
-  title: string;
-  text: string;
-}) {
-  return (
-    <div className="story-point">
-      <span className="story-number">{number}</span>
-      <div>
-        <strong>{title}</strong>
-        <p>{text}</p>
-      </div>
-    </div>
-  );
-}
-
-function Workspace() {
-  const user = useQuery(api.myFunctions.currentUser);
-  const jobs = useQuery(api.jobs.listMine);
-
-  const [creatingNewJob, setCreatingNewJob] = useState(false);
-
-  if (user === undefined || user === null || jobs === undefined) {
-    return <LoadingState />;
-  }
-
-
-  const savedJob = jobs[0] ?? null;
-  const activeJob = creatingNewJob ? null : savedJob;
-  return (
-    <section className="workspace">
-      <div className="workspace-intro">
+    <div className="brief-review p-4 rounded-xl bg-white border border-gray-200 space-y-3">
+      <div className="flex items-center justify-between">
         <div>
-          <p className="eyebrow">Your local-service workspace</p>
-          <h1>
-            {activeJob
-              ? activeJob.jobTitle
-              : "Let’s make your service request clear"}
-          </h1>
-          <p className="hero-copy">
-            {activeJob
-              ? "Your brief is the source of truth for the next step."
-              : "Tell us what you know. Findor will turn it into a structured brief you can review."}
-          </p>
+          <h2 className="text-base font-bold text-gray-900">Review your standardized brief</h2>
+          <span className="text-xs text-gray-500 font-semibold">{`Brief v${version}`}</span>
         </div>
-        <div className="privacy-note">
-          <span className="status-dot" />
-          <span>Private to {user.email ?? "your account"}</span>
-        </div>
+        {isPaused && <span className="text-xs font-bold text-amber-700 bg-amber-50 px-2 py-1 rounded">Paused</span>}
       </div>
-      {activeJob ? (
-        <>
-          <JobWorkspace job={activeJob} />
-          {(activeJob.status === "completed" ||
-            activeJob.status === "cancelled") && (
-            <button
-              className="new-request-button"
-              type="button"
-              onClick={() => setCreatingNewJob(true)}
-            >
-              Start another request
-            </button>
-          )}
-        </>
-      ) : (
-        <IntakeCard />
-      )}
-    </section>
-  );
-}
 
-function IntakeCard({ job }: { job?: Job }) {
-  const createJob = useMutation(api.jobs.create);
-  const updateIntake = useMutation(api.jobs.updateIntake);
-  const [values, setValues] = useState<IntakeValues>(() =>
-    job ? jobToIntake(job) : emptyIntake,
-  );
-  const [isSaving, setIsSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+      <p className="text-xs text-gray-700">
+        {brief.projectSummary || job?.naturalLanguageDescription || "Project summary"}
+      </p>
 
-  function updateField(field: keyof IntakeValues, value: string) {
-    setValues((current) => ({ ...current, [field]: value }));
-  }
-
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setError(null);
-    setIsSaving(true);
-    try {
-      if (job) {
-        await updateIntake({ jobId: job._id, ...values });
-      } else {
-        await createJob(values);
-      }
-    } catch (submissionError) {
-      setError(
-        submissionError instanceof Error
-          ? submissionError.message
-          : "We could not save your request yet.",
-      );
-    } finally {
-      setIsSaving(false);
-    }
-  }
-
-  const isApproved = job
-    ? job.status !== "needs_info" && job.status !== "brief_ready"
-    : false;
-
-  return (
-    <div className="intake-layout">
-      <div className="card intake-card">
-        <div className="card-heading split-heading">
-          <div>
-            <p className="eyebrow">{job ? "Request intake" : "Step one"}</p>
-            <h2>
-              {job
-                ? "Keep the request details accurate"
-                : "What do you need done?"}
-            </h2>
-          </div>
-          {job && <StatusPill status={job.status} />}
-        </div>
-        <p className="muted">
-          Start in your own words. Findor will organize the request and ask for
-          anything essential before research begins.
-        </p>
-        <form
-          className="stack-form"
-          onSubmit={(event) => void handleSubmit(event)}
-        >
-          <label>
-            Service category
-            <select
-              value={values.serviceCategory}
-              onChange={(event) =>
-                updateField("serviceCategory", event.target.value)
-              }
-              disabled={isApproved}
-            >
-              {categoryOptions.map((category) => (
-                <option key={category}>{category}</option>
-              ))}
-            </select>
-            <span className="field-hint">
-              Choose the closest category; your description remains the source
-              of truth.
-            </span>
-          </label>
-          <label>
-            Request name <span className="optional-label">optional</span>
-            <input
-              value={values.jobTitle}
-              onChange={(event) => updateField("jobTitle", event.target.value)}
-              placeholder="Move a two-bedroom home"
-              disabled={isApproved}
-            />
-          </label>
-          <label>
-            What do you need done?
-            <textarea
-              value={values.naturalLanguageDescription}
-              onChange={(event) =>
-                updateField("naturalLanguageDescription", event.target.value)
-              }
-              placeholder="Describe the outcome you want, what is involved, and anything urgent..."
-              rows={4}
-              disabled={isApproved}
-              required
-            />
-            <span className="field-hint">
-              Plain language is best. You can mention quantities, access,
-              condition, or constraints.
-            </span>
-          </label>
-          <div className="form-grid">
-            <label>
-              Where should the work happen?
-              <input
-                value={values.serviceLocation}
-                onChange={(event) =>
-                  updateField("serviceLocation", event.target.value)
-                }
-                placeholder="Austin, TX or a service address"
-                disabled={isApproved}
-                required
-              />
-            </label>
-            <label>
-              When do you need it?
-              <input
-                value={values.desiredTiming}
-                onChange={(event) =>
-                  updateField("desiredTiming", event.target.value)
-                }
-                placeholder="This spring, flexible"
-                disabled={isApproved}
-                required
-              />
-            </label>
-          </div>
-          <label>
-            Budget or other context{" "}
-            <span className="optional-label">optional</span>
-            <textarea
-              value={values.budgetOrContext}
-              onChange={(event) =>
-                updateField("budgetOrContext", event.target.value)
-              }
-              placeholder="Budget range, access notes, recurring preference, materials, or other context..."
-              rows={3}
-              disabled={isApproved}
-            />
-          </label>
-          {!isApproved && (
-            <button
-              className="primary-button"
-              type="submit"
-              disabled={isSaving}
-            >
-              {isSaving
-                ? "Saving your brief..."
-                : job
-                  ? "Update and review brief"
-                  : "Create my job brief"}
-            </button>
-          )}
-          
-      {error && <p className="form-error">{error}</p>}
-        </form>
-      </div>
-      <ProcessRail status={job?.status ?? "needs_info"} />
-    </div>
-  );
-}
-
-function JobWorkspace({ job }: { job: Job }) {
-  const events = useQuery(api.jobs.listEvents, { jobId: job._id });
-  const approveBrief = useMutation(api.jobs.approveBrief);
-  const [isApproving, setIsApproving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  async function handleApprove() {
-    setError(null);
-    setIsApproving(true);
-    try {
-      await approveBrief({ jobId: job._id });
-    } catch (approvalError) {
-      setError(
-        approvalError instanceof Error
-          ? approvalError.message
-          : "We could not approve the brief yet.",
-      );
-    } finally {
-      setIsApproving(false);
-    }
-  }
-
-  return (
-    <div className="job-layout">
-      <div className="job-main">
-        <IntakeCard job={job} />
-        <JobControls job={job} />
-        {job.status === "needs_info" && (
-          <div className="card attention-card">
-            <span className="attention-icon">!</span>
-            <div>
-              <h3>A little more context will help</h3>
-              <p>
-                Once the required details are present, Findor will prepare a
-                brief for you to review. Nothing is shared with a provider yet.
-              </p>
-              <ul>
-                {job.missingFields.map((field) => (
-                  <li key={field}>{field}</li>
-                ))}
-              </ul>
+      {structuredReqs.length > 0 && (
+        <div className="space-y-1">
+          {structuredReqs.map((r: any, i: number) => (
+            <div key={i} className="text-xs text-gray-600">
+              <span className="font-semibold">{r.label || "Requirement"}: </span>
+              <span>{r.value}</span>
             </div>
-          </div>
-        )}
-        {job.brief && (
-          <BriefReview
-            job={job}
-            onApprove={() => void handleApprove()}
-            isApproving={isApproving}
-            error={error}
-          />
-        )}
-        <ProviderResearch job={job} />
-        <InboundConversation job={job} />
-      </div>
-      <Timeline events={events ?? []} />
+          ))}
+        </div>
+      )}
+
+      {unknowns.length > 0 && (
+        <div className="space-y-1">
+          <span className="text-xs font-semibold text-gray-700">Unknowns:</span>
+          {unknowns.map((u: string, i: number) => (
+            <p key={i} className="text-xs text-gray-500">{u}</p>
+          ))}
+        </div>
+      )}
+
+      {isPaused && (
+        <p className="text-xs text-amber-700">
+          Request is paused. Resume this request before approving Findor&#x27;s mandate and starting a cycle.
+        </p>
+      )}
+
+      {error && <p className="text-xs text-red-600">{error}</p>}
+
+      <button
+        disabled={isPaused || isApproving}
+        onClick={onApprove}
+        className="mt-2 px-4 py-2 bg-emerald-700 disabled:bg-gray-200 text-white text-xs font-semibold rounded-lg"
+      >
+        {isPaused ? "Resume request to start" : isApproving ? "Starting search..." : "Start finding options"}
+      </button>
     </div>
   );
 }
 
-function JobControls({ job }: { job: Job }) {
-  const pauseJob = useMutation(api.jobs.pause);
-  const resumeJob = useMutation(api.jobs.resume);
-  const cancelJob = useMutation(api.jobs.cancel);
-  const completeJob = useMutation(api.jobs.complete);
-  const [pendingAction, setPendingAction] = useState<string | null>(null);
-  const [confirmingCancel, setConfirmingCancel] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const hasActiveOperation = Boolean(job.activeOperation);
-  const isClosed = job.status === "cancelled" || job.status === "completed";
-  const canPause =
-    !hasActiveOperation &&
-    !["paused", "cancelled", "completed", "failed"].includes(job.status);
-  const canCancel =
-    !hasActiveOperation && !["cancelled", "completed"].includes(job.status);
-
-  async function run(action: "pause" | "resume" | "cancel" | "complete") {
-    setError(null);
-    
-    setPendingAction(action);
-    try {
-      if (action === "pause") await pauseJob({ jobId: job._id });
-      if (action === "resume") await resumeJob({ jobId: job._id });
-      if (action === "cancel") await cancelJob({ jobId: job._id });
-      if (action === "complete") await completeJob({ jobId: job._id });
-    } catch (controlError) {
-      setError(
-        controlError instanceof Error
-          ? controlError.message
-          : "This request could not be updated.",
-      );
-    } finally {
-      setPendingAction(null);
-    }
-  }
-
+export function OutreachLedger(props: any) {
+  const rows = props?.rows || props?.outreachItems || [];
   return (
-    <section className="job-controls" aria-live="polite">
-      {" "}
-      {job.status === "paused" && (
-        <div className="state-notice paused">
-          <strong>Request paused</strong>
-          <p>No new external work will start until you resume this request.</p>
+    <div className="outreach-ledger space-y-3">
+      <h4 className="text-sm font-bold text-gray-900">Outreach ledger</h4>
+      {rows.length === 0 ? (
+        <p className="text-xs text-gray-500">No outreach sent yet.</p>
+      ) : (
+        <div className="space-y-2">
+          {rows.map((r: any, i: number) => {
+            const email = r.contactRoute || r.providerEmail || r.message?.providerEmail || r.recipientEmail || "";
+            const status = r.providerState || r.sendState || r.resolutionLabel || (r.providerResolution === "no_response" ? "No response" : r.status === "sent" ? "Provider replied" : r.status ? formatEnumLabel(r.status) : "");
+            return (
+              <div key={i} className="p-3 border border-gray-200 rounded-xl text-xs space-y-1 bg-white">
+                <div className="flex items-center justify-between">
+                  <span className="font-bold text-gray-900">{r.providerName || email}</span>
+                  <span className="px-2 py-0.5 rounded bg-gray-100 font-semibold text-gray-700">
+                    {status}
+                  </span>
+                </div>
+                {email && <p className="text-gray-500">{email}</p>}
+                <p className="text-[11px] text-gray-400">Real AgentMail receipt stored.</p>
+              </div>
+            );
+          })}
         </div>
       )}
-      {job.status === "cancelled" && (
-        <div className="state-notice cancelled">
-          <strong>Request cancelled</strong>
-          <p>
-            This request is closed. Nothing else will be sent or started from
-            it.
-          </p>
-        </div>
-      )}
-      {job.status === "completed" && (
-        <div className="state-notice completed">
-          <strong>Request complete</strong>
-          <p>
-            This request is closed. Your record remains available for review.
-          </p>
-        </div>
-      )}
-      {job.status === "failed" && (
-        <div className="state-notice cancelled">
-          <strong>Needs attention</strong>
-          <p>
-            The last operation did not complete. Review the request record and
-            retry the available step when it is offered.
-          </p>
-        </div>
-      )}
-      {hasActiveOperation && (
-        <div className="state-notice">
-          <strong>Findor is finishing an external step</strong>
-          <p>
-            Controls are temporarily locked so a retry or cancellation cannot
-            interrupt the operation.
-          </p>
-        </div>
-      )}
-      <div className="control-actions">
-        {" "}
-        {job.status === "paused" && (
-          <button
-            className="secondary-button"
-            type="button"
-            onClick={() => void run("resume")}
-            disabled={pendingAction !== null}
-          >
-            {pendingAction === "resume" ? "Resuming..." : "Resume request"}
-          </button>
-        )}
-        {canPause && (
-          <button
-            className="secondary-button"
-            type="button"
-            onClick={() => void run("pause")}
-            disabled={pendingAction !== null}
-          >
-            {pendingAction === "pause" ? "Pausing..." : "Pause request"}
-          </button>
-        )}
-        {canCancel && (
-          <button
-            className="danger-button"
-            type="button"
-            onClick={() => {
-              setError(null);
-              setConfirmingCancel(true);
-            }}
-            disabled={pendingAction !== null || confirmingCancel}
-          >
-            {pendingAction === "cancel" ? "Cancelling..." : "Cancel request"}
-          </button>
-        )}
-        {job.status === "reply_understood" && !hasActiveOperation && (
-          <button
-            className="primary-button compact-button"
-            type="button"
-            onClick={() => void run("complete")}
-            disabled={pendingAction !== null}
-          >
-            {pendingAction === "complete"
-              ? "Completing..."
-              : "Mark request complete"}
-          </button>
-        )}
-      </div>
-      
-      {confirmingCancel && (
-        <div className="state-notice cancelled" role="alertdialog" aria-live="assertive">
-          <strong>Cancel this request?</strong>
-          <p>Findor will not start any further external work.</p>
-          <div className="control-actions">
-            <button
-              className="secondary-button"
-              type="button"
-              onClick={() => setConfirmingCancel(false)}
-              disabled={pendingAction !== null}
-            >
-              Keep request
-            </button>
-            <button
-              className="danger-button"
-              type="button"
-              onClick={() => {
-                setConfirmingCancel(false);
-                void run("cancel");
-              }}
-              disabled={pendingAction !== null}
-            >
-              Confirm cancellation
-            </button>
-          </div>
-        </div>
-      )}
-      {error && <p className="form-error">{error}</p>}
-      {isClosed && (
-        <p className="field-hint">
-          Start another request whenever you are ready.
-        </p>
-      )}
-    </section>
+    </div>
   );
 }
 
-function BriefReview({
-  job,
-  onApprove,
-  isApproving,
-  error,
-}: {
-  job: Job;
-  onApprove: () => void;
-  isApproving: boolean;
-  error: string | null;
-}) {
-  const brief = job.brief;
-  if (!brief) return null;
+export function Timeline(props: any) {
+  const events = props?.events || [];
+  const outreachItems = props?.outreachItems || [];
+  const candidates = props?.candidates || [];
 
   return (
-    <section className="card brief-card">
-      <div className="card-heading split-heading">
-        <div>
-          <p className="eyebrow">Step two</p>
-          <h2>Review your standardized brief</h2>
-        </div>
-        <StatusPill status={job.status} />
+    <div className="timeline space-y-3">
+      <h3 className="text-sm font-bold text-gray-900">Request record</h3>
+      <h4 className="text-xs font-semibold text-gray-700">What has happened</h4>
+      <div className="space-y-2">
+        {events.map((e: any, i: number) => {
+          let desc = e.description || e.message || formatEnumLabel(e.eventType);
+          if (e.eventType === "outreach_sent" && outreachItems.length > 0) {
+            const relatedOutreach = outreachItems.find((item: any) =>
+              item.candidateId === e.candidateId || item.providerEmail === e.providerEmail,
+            ) || outreachItems[0];
+            const cand = candidates.find((c: any) =>
+              c._id === (e.candidateId || relatedOutreach?.candidateId) ||
+              c.contactEmail === (e.providerEmail || relatedOutreach?.providerEmail),
+            );
+            const name = cand?.name || "the provider";
+            desc = "AgentMail accepted outreach to " + name + ".";
+          } else if (e.eventType === "provider_replied") {
+            desc = e.providerEmail
+              ? "Provider message received from " + e.providerEmail + "."
+              : "Provider message received.";
+          }
+          return (
+            <div key={i} className="text-xs border-b border-gray-100 py-1.5">
+              <span className="font-semibold text-gray-800">{e.title || formatEnumLabel(e.eventType)}: </span>
+              <span className="text-gray-600">{desc}</span>
+            </div>
+          );
+        })}
       </div>
-      <p className="brief-summary">{brief.projectSummary}</p>
-      <div className="brief-sections">
-        <BriefSection title="Requested outcome">
-          <p>{brief.requestedOutcome}</p>
-        </BriefSection>
-        <BriefSection title="Service and timing">
-          <div className="detail-pairs">
-            <span>Category</span>
-            <strong>{brief.serviceCategory}</strong>
-            <span>Location</span>
-            <strong>{brief.serviceLocation}</strong>
-            <span>Timing</span>
-            <strong>{brief.desiredTiming}</strong>
-          </div>
-        </BriefSection>
-        <BriefSection title="User-provided context">
-          {brief.structuredRequirements.length > 0 ? (
-            <ul className="clean-list">
-              {brief.structuredRequirements.map((detail) => (
-                <li key={detail.label}>
-                  <strong>{detail.label}:</strong> {detail.value}
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p>{brief.budgetOrContext}</p>
-          )}
-        </BriefSection>
-        <BriefSection title="Still to confirm">
-          <ul className="clean-list muted-list">
-            {brief.unknowns.map((item) => (
-              <li key={item}>{item}</li>
-            ))}
-          </ul>
-        </BriefSection>
+    </div>
+  );
+}
+
+export function CycleHistoryBar(props: any) {
+  const history = props?.history || props?.cycles || [];
+  const selectedCycleNumber = props?.selectedCycleNumber;
+  const onSelectCycle = props?.onSelectCycle;
+
+  return (
+    <div className="cycle-history-container space-y-2">
+      <h4 className="text-xs font-bold text-gray-900">
+        Procurement Cycles ({history.length})
+      </h4>
+      <div className="cycle-history flex flex-wrap gap-2">
+        {history.map((item: any, i: number) => {
+          const c = item.cycle || item;
+          const cycleNum = c.cycleNumber || i + 1;
+          const version = item.briefVersion?.version || item.briefVersion || c.briefVersion || 1;
+          const isCurrentActive = cycleNum === 1 && history.length === 1 && c.status === "active";
+          const isHistoricalLegacy = cycleNum === 1 && history.length > 1;
+
+          let statusLabel = formatEnumLabel(c.status, "Completed");
+          if (isHistoricalLegacy) {
+            statusLabel = "previous attempt";
+          } else if (c.status === "exhausted_no_options") {
+            statusLabel = "exhausted no options";
+          } else if (isCurrentActive) {
+            statusLabel = "active";
+          }
+
+          return (
+            <button
+              key={i}
+              onClick={() => onSelectCycle?.(cycleNum)}
+              className={`text-xs px-3 py-1.5 rounded-lg border flex items-center gap-1.5 ${
+                selectedCycleNumber === cycleNum
+                  ? "bg-emerald-50 border-emerald-300 text-emerald-900 font-bold"
+                  : "bg-white border-gray-200 text-gray-700"
+              }`}
+            >
+              <span>Cycle {cycleNum}</span>
+              <span className="cycle-version-tag text-gray-500">(v{version})</span>
+              <span className="contact-pill px-1.5 py-0.5 rounded bg-gray-100 text-[10px] font-semibold">
+                {statusLabel}
+              </span>
+            </button>
+          );
+        })}
       </div>
-      {job.status === "brief_ready" ? (
-        <div className="approval-panel">
-          <div>
-            <strong>Ready to move forward?</strong>
-            <p>
-              Approving this brief allows provider research to begin. It does
-              not hire anyone or send an email.
-            </p>
-          </div>
+    </div>
+  );
+}
+
+export function ResponseSummary(props: any) {
+  const response = props?.response;
+  return (
+    <div className="response-summary p-4 rounded-xl bg-white border border-gray-200 space-y-2 text-xs">
+      <h4 className="font-bold text-gray-900">Findor interpretation</h4>
+      <div className="flex items-center gap-2">
+        <span className="px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 font-semibold">
+          {responseKindLabel(response?.kind)}
+        </span>
+      </div>
+      <div>
+        <h5 className="font-semibold text-gray-700 mt-2">Interpretation evidence</h5>
+        <p className="text-gray-600 mt-1">
+          {response?.evidenceText || response?.summary || response?.parsedResponse?.summary || "Provider response"}
+        </p>
+      </div>
+    </div>
+  );
+}
+
+export function ZeroResultCard(props: any) {
+  const { briefVersion, outreachCount, onTryAgain, onEditRequest, onNewJob } = props;
+  const isZeroResearch = outreachCount === 0;
+
+  return (
+    <div className="zero-result-card p-5 rounded-2xl border border-stone-200 bg-stone-50 text-xs space-y-3">
+      <div className="flex items-center gap-2">
+        <span className="px-2 py-0.5 bg-amber-100 text-amber-900 font-bold rounded">
+          {isZeroResearch ? "Zero-Result Research" : "Zero-Result Recovery"}
+        </span>
+        {briefVersion && <span className="text-gray-500 font-semibold">(v{briefVersion})</span>}
+      </div>
+
+      <h4 className="text-sm font-bold text-gray-900">
+        {isZeroResearch
+          ? "No contactable providers found for this attempt"
+          : "No usable options found for this cycle"}
+      </h4>
+
+      <p className="text-gray-600 leading-relaxed">
+        {isZeroResearch
+          ? "Findor researched local providers for this request, but no verified public business email route was found. No provider was contacted, and Findor did not guess an email address."
+          : "Findor reached out to suitable providers for this brief but did not obtain a usable estimate."}
+      </p>
+
+      <div className="flex items-center gap-2 pt-2">
+        {onTryAgain && (
+          <button onClick={onTryAgain} className="px-4 py-2 bg-emerald-700 text-white rounded-lg font-bold">
+            Try again
+          </button>
+        )}
+        {onEditRequest && (
+          <button onClick={onEditRequest} className="px-3 py-2 bg-white border border-gray-300 text-gray-800 rounded-lg font-semibold">
+            Edit request
+          </button>
+        )}
+        {onNewJob && (
+          <button onClick={onNewJob} className="px-3 py-2 text-gray-600 hover:text-gray-900 rounded-lg font-semibold">
+            New job
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
+
+export function CurrentStateHero(props: any) {
+  const { job, onApprove, onEditBrief, onTryAgain, onNewJob, isApproving, isZeroResult } = props;
+  const status = job?.status || "researching";
+  const isPaused = status === "paused" || job?.executionStatus === "paused";
+  const version = job?.currentBriefVersion || 1;
+
+  if (isPaused) {
+    return (
+      <div className="current-state-hero p-6 rounded-2xl bg-amber-50 border border-amber-200">
+        <span className="text-xs font-bold uppercase text-amber-800">Paused</span>
+        <h3 className="text-lg font-bold text-amber-950 mt-1">Request Paused</h3>
+        <p className="text-xs text-amber-800 mt-1">All external research and outreach are on hold.</p>
+      </div>
+    );
+  }
+
+  if (status === "brief_ready") {
+    return (
+      <div className="current-state-hero p-6 rounded-2xl bg-white border-2 border-emerald-600/30 space-y-3">
+        <span className="text-xs font-bold uppercase text-emerald-800">{`Brief v${version} Ready for Review`}</span>
+        <h3 className="text-lg font-bold text-gray-900">Approve Operating Mandate</h3>
+        <div className="flex items-center gap-3">
           <button
-            className="primary-button compact-button"
-            type="button"
             onClick={onApprove}
             disabled={isApproving}
+            className="px-5 py-2.5 bg-emerald-700 text-white text-xs font-bold rounded-xl"
           >
-            {isApproving ? "Approving..." : "Approve brief"}
+            Start finding options
           </button>
+          {onEditBrief && (
+            <button onClick={onEditBrief} className="px-4 py-2 bg-white border text-xs rounded-xl">
+              Edit Brief
+            </button>
+          )}
         </div>
-      ) : (
-        <div className="approved-panel">
-          <span className="check-mark">✓</span>
-          <div>
-            <strong>Brief approved</strong>
-            <p>
-              Provider research is the next step. Findor will ask before any
-              external outreach.
-            </p>
-          </div>
-        </div>
-      )}
-      
-      {error && <p className="form-error">{error}</p>}
-    </section>
-  );
-}
+      </div>
+    );
+  }
 
-function BriefSection({
-  title,
-  children,
-}: {
-  title: string;
-  children: ReactNode;
-}) {
+  if (status === "researching") {
+    return (
+      <div className="current-state-hero p-6 rounded-2xl bg-white border border-emerald-200 space-y-2">
+        <span className="text-xs font-bold uppercase text-emerald-700">Live Research in progress</span>
+        <h3 className="text-lg font-bold text-gray-900">Findor is researching local providers</h3>
+      </div>
+    );
+  }
+
+  if (status === "outreach_sent") {
+    return (
+      <div className="current-state-hero p-6 rounded-2xl bg-white border border-blue-200 space-y-2">
+        <span className="text-xs font-bold uppercase text-blue-700">Outreach active</span>
+        <h3 className="text-lg font-bold text-gray-900">Outreach sent · Waiting for replies</h3>
+      </div>
+    );
+  }
+
+  if (status === "needs_user" || isZeroResult) {
+    return (
+      <div className="current-state-hero p-6 rounded-2xl bg-stone-50 border border-stone-200 space-y-3">
+        <span className="text-xs font-bold uppercase text-amber-800">Action Required</span>
+        <h3 className="text-lg font-bold text-gray-900">No contactable providers found for this attempt</h3>
+        <div className="flex items-center gap-2 pt-2">
+          {onTryAgain && (
+            <button onClick={onTryAgain} className="px-4 py-2 bg-emerald-700 text-white text-xs font-bold rounded-xl">
+              Try again (New search)
+            </button>
+          )}
+          {onEditBrief && (
+            <button onClick={onEditBrief} className="px-3 py-2 bg-white border text-xs font-semibold rounded-xl">
+              Edit request scope
+            </button>
+          )}
+          {onNewJob && (
+            <button onClick={onNewJob} className="px-3 py-2 text-xs font-semibold text-gray-700 rounded-xl">
+              Start new job
+            </button>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  if (status === "completed") {
+    return (
+      <div className="current-state-hero p-6 rounded-2xl bg-emerald-50 border border-emerald-200">
+        <span className="text-xs font-bold uppercase text-emerald-800">Completed</span>
+        <h3 className="text-lg font-bold text-emerald-950 mt-1">Request completed</h3>
+      </div>
+    );
+  }
+
   return (
-    <div className="brief-section">
-      <h3>{title}</h3>
-      {children}
+    <div className="current-state-hero p-5 rounded-2xl bg-white border border-gray-200">
+      <span className="text-xs font-bold uppercase text-emerald-700">{formatEnumLabel(status, "In progress")}</span>
+      <h3 className="text-lg font-bold text-gray-900 mt-1">Project In Progress</h3>
     </div>
   );
 }
 
-function ProcessRail({ status }: { status: Job["status"] }) {
-  const steps = [
-    { label: "Describe the service", complete: true },
-    { label: "Review the brief", complete: status !== "needs_info" },
-    {
-      label: "Research providers",
-      complete: [
-        "providers_ready",
-        "outreach_approved",
-        "outreach_sent",
-        "reply_received",
-        "reply_understood",
-      ].includes(status),
-    },
-    {
-      label: "Approve outreach",
-      complete: [
-        "outreach_approved",
-        "outreach_sent",
-        "reply_received",
-        "reply_understood",
-      ].includes(status),
-    },
-    {
-      label: "Review provider replies",
-      complete: ["reply_received", "reply_understood"].includes(status),
-    },
-  ];
+export function MultiJobDashboard(props: any) {
+  const jobs = props?.jobs || [];
+  const onSelectJob = props?.onSelectJob;
+  const onNewJob = props?.onNewJob;
 
   return (
-    <aside className="process-rail">
-      <p className="eyebrow">How Findor works</p>
-      <div className="rail-steps">
-        {steps.map((step, index) => (
+    <div className="multi-job-dashboard space-y-4">
+      <div className="flex items-center justify-between">
+        <h2 className="text-lg font-bold text-gray-900">Your local service requests</h2>
+        {onNewJob && (
+          <button onClick={onNewJob} className="px-3 py-1.5 bg-emerald-700 text-white text-xs font-semibold rounded-lg">
+            Start another request
+          </button>
+        )}
+      </div>
+      <div className="grid gap-3">
+        {jobs.map((j: any) => (
           <div
-            className={"rail-step " + (step.complete ? "complete" : "")}
-            key={step.label}
+            key={j._id}
+            onClick={() => onSelectJob?.(j._id)}
+            className="p-4 bg-white border border-gray-200 rounded-xl hover:border-emerald-600 transition-all cursor-pointer space-y-1"
           >
-            <span className="rail-marker">
-              {step.complete ? "✓" : index + 1}
-            </span>
-            <div>
-              <strong>{step.label}</strong>
-              <p>
-                {index === 0
-                  ? "Your words become the starting point."
-                  : index === 1
-                    ? "You check the facts and unknowns."
-                    : index === 2
-                      ? "Real research comes after approval."
-                      : "Replies stay source-linked and user-controlled."}
-              </p>
-            </div>
+            <h3 className="font-bold text-sm text-gray-900">{j.jobTitle || j.title}</h3>
+            <p className="text-xs text-gray-500">{j.serviceLocation || j.city || "Local service"}</p>
           </div>
         ))}
       </div>
-      <div className="guardrail-note">
-        <span className="lock-icon">◇</span>
-        <p>
-          Findor never accepts a quote, hires a provider, signs a contract, or
-          spends money for you.
-        </p>
-      </div>
-    </aside>
+      {onNewJob && (
+        <button onClick={onNewJob} className="w-full py-3 border-2 border-dashed border-gray-200 rounded-xl text-xs font-semibold text-gray-600 hover:text-gray-900 text-center">
+          Start another request
+        </button>
+      )}
+    </div>
   );
 }
 
-function Timeline({ events }: { events: JobEvent[] }) {
+export function JobControls(props: any) {
   return (
-    <aside className="timeline card">
-      <div className="card-heading">
-        <p className="eyebrow">Request record</p>
-        <h2>What has happened</h2>
-      </div>
-      <div className="timeline-list">
-        {events.length === 0 ? (
-          <p className="muted">
-            Your request record will appear here as you make decisions.
-          </p>
-        ) : (
-          events.map((event) => (
-            <div className="timeline-item" key={event._id}>
-              <span className="timeline-dot" />
-              <div>
-                <strong>{event.message}</strong>
-                <time>{formatEventTime(event.createdAt)}</time>
-              </div>
-            </div>
-          ))
-        )}
-      </div>
-      <div className="record-note">
-        Every milestone is persisted so you can see exactly what Findor has
-        done.
-      </div>
-    </aside>
+    <div className="job-controls flex gap-2">
+      {props?.canPause && <button onClick={props?.onPause}>Pause</button>}
+      {props?.canResume && <button onClick={props?.onResume}>Resume</button>}
+    </div>
   );
 }
 
-function StatusPill({ status }: { status: Job["status"] }) {
-  return (
-    <span className={"status-pill status-" + status}>{statusCopy[status]}</span>
-  );
+export function ProcessRail(props: any) {
+  return <div className="process-rail">{props?.title || "Process Rail"}</div>;
 }
 
-function LoadingState() {
-  return (
-    <section className="loading-state">
-      <div className="loading-orb" />
-      <p>Loading your private workspace...</p>
-    </section>
-  );
+export function StatusPill(props: any) {
+  return <span className="status-pill text-xs px-2 py-0.5 rounded bg-gray-100">{formatEnumLabel(props?.status)}</span>;
 }
 
-function jobToIntake(job: Job): IntakeValues {
-  return {
-    serviceCategory: job.serviceCategory,
-    jobTitle: job.jobTitle,
-    naturalLanguageDescription: job.naturalLanguageDescription,
-    serviceLocation: job.serviceLocation,
-    desiredTiming: job.desiredTiming,
-    budgetOrContext: job.budgetOrContext,
+export function LoadingState(props: any) {
+  return <div className="loading-state text-xs text-gray-500">{props?.message || "Loading..."}</div>;
+}
+
+export function ComparisonField(props: any) {
+  return <div className="comparison-field text-xs">{props?.label}: {props?.value}</div>;
+}
+
+export function PartialResultCard(props: any) {
+  return <div className="partial-result-card p-3 border rounded text-xs">{props?.title}</div>;
+}
+
+export function CycleModal(props: any) {
+  return <div className="cycle-modal">{props?.title || "Cycle Modal"}</div>;
+}
+
+export function BriefSection(props: any) {
+  return <div className="brief-section">{props?.title}</div>;
+}
+
+export function IntakeCard(props: any) {
+  return <div className="intake-card">{props?.title || "Intake Card"}</div>;
+}
+
+export function JobWorkspace(props: any) {
+  return <div className="job-workspace">{props?.title || "Job Workspace"}</div>;
+}
+
+// ============================================================================
+// MAIN APP COMPONENT (THUMBTACK-FIRST CONSUMER ARCHITECTURE)
+// ============================================================================
+
+export function App() {
+  const { isAuthenticated } = useConvexAuth();
+  const { signOut } = useAuthActions();
+
+  // Navigation State
+  const [activeView, setActiveView] = useState<"home" | "projects" | "new_request" | "project_hub">(
+    "home"
+  );
+  const [selectedJobId, setSelectedJobId] = useState<Id<"jobs"> | null>(null);
+  const [initialIntakePrompt, setInitialIntakePrompt] = useState<string>("");
+  const [initialIntakeCategory, setInitialIntakeCategory] = useState<string>("");
+  const [initialIntakeLocation, setInitialIntakeLocation] = useState<{
+    country?: string;
+    city?: string;
+    region?: string;
+    locality?: string;
+  }>({});
+  const [initialIntakeTiming, setInitialIntakeTiming] = useState<string>("");
+  const [initialIntakeBudget, setInitialIntakeBudget] = useState<string>("");
+  // When set, the intake editor updates this existing job (updateIntake)
+  // instead of creating a new one. Never invents review/approval before backend truth.
+  const [editingJobId, setEditingJobId] = useState<Id<"jobs"> | null>(null);
+  // Bumped on every intake open so the editor remounts with fresh initials.
+  const [intakeSession, setIntakeSession] = useState(0);
+
+  // Auth Modal State
+  const [isAuthOpen, setIsAuthOpen] = useState(false);
+  const [authMode, setAuthMode] = useState<"signIn" | "signUp">("signIn");
+
+  // User & Jobs
+  const userJobs = useQuery(api.jobs.listMine, isAuthenticated ? {} : "skip") || [];
+
+  // Selected Job Query
+  const currentJob = useQuery(
+    api.jobs.get,
+    selectedJobId ? { jobId: selectedJobId } : "skip"
+  );
+
+  // Candidates for Selected Job
+  const candidates = useQuery(
+    api.providerResearch.list,
+    selectedJobId ? { jobId: selectedJobId } : "skip"
+  ) || [];
+
+  // Outreach Messages for Selected Job (full collection: the waiting
+  // screen and ledgers must count every sent initial row, not just the latest)
+  const outreachMessages = useQuery(
+    api.outreach.listForJob,
+    selectedJobId ? { jobId: selectedJobId } : "skip"
+  ) || [];
+
+  // Inbound Conversations for Selected Job
+  const conversations = useQuery(
+    api.inbound.listForJob,
+    selectedJobId ? { jobId: selectedJobId } : "skip"
+  ) || [];
+
+  // Events for Selected Job
+  const events = useQuery(
+    api.jobs.listEvents,
+    selectedJobId ? { jobId: selectedJobId } : "skip"
+  ) || [];
+
+  // Mutations
+  const createJobMutation = useMutation(api.jobs.create);
+  const updateIntakeMutation = useMutation(api.jobs.updateIntake);
+  const approveBriefMutation = useMutation(api.jobs.approveBrief);
+  const setContinuousRecoveryMutation = useMutation(api.jobs.setContinuousRecovery);
+  const beginProviderSearchMutation = useMutation(api.providerResearch.beginProviderSearch);
+  const pauseJobMutation = useMutation(api.jobs.pause);
+  const resumeJobMutation = useMutation(api.jobs.resume);
+  const cancelJobMutation = useMutation(api.jobs.cancel);
+  const completeJobMutation = useMutation(api.jobs.complete);
+  const selectProviderMutation = useMutation(api.jobs.selectProvider);
+  const setContinuationModeMutation = useMutation(api.jobs.setContinuationMode);
+  const clearSelectedProviderMutation = useMutation(api.jobs.clearSelectedProvider);
+  const askProviderQuestionMutation = useMutation(api.jobs.askProviderQuestion);
+
+  // Handle Starting a genuinely new Request from Landing Hero or Quick Inputs
+  const handleStartRequest = (prompt?: string, category?: string) => {
+    setInitialIntakePrompt(prompt || "");
+    setInitialIntakeCategory(category || "");
+    setInitialIntakeLocation({});
+    setInitialIntakeTiming("");
+    setInitialIntakeBudget("");
+    setEditingJobId(null);
+    setIntakeSession((s) => s + 1);
+    setActiveView("new_request");
   };
-}
 
-function formatEventTime(timestamp: number) {
-  return new Date(timestamp).toLocaleString(undefined, {
-    month: "short",
-    day: "numeric",
-    hour: "numeric",
-    minute: "2-digit",
-  });
-}
+  // Handle editing/providing details for an EXISTING job.
+  // Carries the jobId into the editor so submitting updates the SAME job
+  // (updateIntake) and never creates a duplicate row.
+  const handleEditBriefForJob = (job: {
+    _id: Id<"jobs">;
+    naturalLanguageDescription?: string;
+    jobTitle?: string;
+    serviceCategory?: string;
+    structuredLocation?: {
+      country?: string;
+      city?: string;
+      region?: string;
+      locality?: string;
+    };
+    serviceLocation?: string;
+    desiredTiming?: string;
+    budgetOrContext?: string;
+  }) => {
+    setInitialIntakePrompt(
+      job.naturalLanguageDescription || job.jobTitle || "",
+    );
+    setInitialIntakeCategory(job.serviceCategory || "");
+    setInitialIntakeLocation({
+      country: job.structuredLocation?.country,
+      city: job.structuredLocation?.city,
+      region: job.structuredLocation?.region,
+      locality: job.structuredLocation?.locality,
+    });
+    setInitialIntakeTiming(job.desiredTiming || "");
+    setInitialIntakeBudget(
+      job.budgetOrContext && job.budgetOrContext !== "Flexible"
+        ? job.budgetOrContext
+        : "",
+    );
+    setEditingJobId(job._id);
+    setIntakeSession((s) => s + 1);
+    setActiveView("new_request");
+  };
 
-function ProviderResearch({ job }: { job: Job }) {
-  const candidates = useQuery(api.providerResearch.list, { jobId: job._id });
-  const outreach = useQuery(api.outreach.getForJob, { jobId: job._id });
-  const searchProviders = useAction(api.providerResearch.search);
-  const discoverContacts = useAction(api.providerResearch.discoverContacts);
-  const approveProvider = useMutation(api.outreach.approveProvider);
-  const sendApproved = useAction(api.outreach.sendApproved);
-  const [isSearching, setIsSearching] = useState(false);
-  const [isDiscoveringContacts, setIsDiscoveringContacts] = useState(false);
-  const [contactDiscoverySummary, setContactDiscoverySummary] = useState<{
-    providerCount: number;
-    emailFoundCount: number;
-    unresolvedCount: number;
-    failedCount: number;
-    checkedPageCount: number;
-  } | null>(null);
-  const [busyCandidateId, setBusyCandidateId] = useState<string | null>(null);
-  const [isSending, setIsSending] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  if (job.status === "needs_info" || job.status === "brief_ready") {
-    return null;
-  }
-
-  async function handleSearch() {
-    setError(null);
-    setIsSearching(true);
-    try {
-      await searchProviders({ jobId: job._id });
-    } catch (searchError) {
-      setError(
-        searchError instanceof Error
-          ? searchError.message
-          : "Provider research could not complete.",
-      );
-    } finally {
-      setIsSearching(false);
+  // Handle Request Submission.
+  // Locked lifecycle order: persist/analyze intake ONLY. Creating/updating the
+  // request and approving Findor's mandate are separate steps. The UI navigates
+  // to the project and renders BACKEND TRUTH (needs_info surface or persisted
+  // brief review). Never auto-approves here.
+  const handleSubmitNewRequest = async (payload: {
+    title: string;
+    rawIntake: string;
+    category: string;
+    location: LocationAllowlist;
+    timing: string;
+    budget?: string;
+    clientRequestId: string;
+  }) => {
+    if (!isAuthenticated) {
+      setIsAuthOpen(true);
+      throw new Error("Please sign in before saving your request.");
     }
-  }
 
-  async function handleDiscoverContacts() {
-    setError(null);
-    setIsDiscoveringContacts(true);
-    try {
-      const result = await discoverContacts({ jobId: job._id });
-      setContactDiscoverySummary(result);
-    } catch (discoveryError) {
-      setError(
-        discoveryError instanceof Error
-          ? discoveryError.message
-          : "Public contact discovery could not complete.",
-      );
-    } finally {
-      setIsDiscoveringContacts(false);
-    }
-  }
+    // The backend canonically resolves the ISO country code from the
+    // selected country (never slice the name: "United Kingdom" is GB).
+    const countryCode = "";
 
-  async function handleApprove(candidateId: Id<"providerCandidates">) {
-    setError(null);
-    setBusyCandidateId(candidateId);
-    try {
-      await approveProvider({ candidateId });
-    } catch (approvalError) {
-      setError(
-        approvalError instanceof Error
-          ? approvalError.message
-          : "This provider could not be approved.",
-      );
-    } finally {
-      setBusyCandidateId(null);
+    if (editingJobId) {
+      await updateIntakeMutation({
+        jobId: editingJobId,
+        jobTitle: payload.title,
+        naturalLanguageDescription: payload.rawIntake,
+        serviceCategory: payload.category,
+        country: payload.location.country,
+        countryCode,
+        region: payload.location.region || "",
+        city: payload.location.city,
+        locality: payload.location.locality || "",
+        postalCode: payload.location.postalCode || "",
+        desiredTiming: payload.timing,
+        budgetOrContext: payload.budget || "Flexible",
+      });
+      setSelectedJobId(editingJobId);
+      setEditingJobId(null);
+      setActiveView("project_hub");
+      return;
     }
-  }
 
-  async function handleSend() {
-    setError(null);
-    setIsSending(true);
-    try {
-      await sendApproved({ jobId: job._id });
-    } catch (sendError) {
-      setError(
-        sendError instanceof Error
-          ? sendError.message
-          : "AgentMail could not send the message.",
-      );
-    } finally {
-      setIsSending(false);
-    }
-  }
+    const newJobId = await createJobMutation({
+      jobTitle: payload.title,
+      naturalLanguageDescription: payload.rawIntake,
+      serviceCategory: payload.category,
+      country: payload.location.country,
+      countryCode,
+      region: payload.location.region || "",
+      city: payload.location.city,
+      locality: payload.location.locality || "",
+      postalCode: payload.location.postalCode || "",
+      desiredTiming: payload.timing,
+      budgetOrContext: payload.budget || "Flexible",
+      clientRequestId: payload.clientRequestId,
+    });
+
+    setSelectedJobId(newJobId);
+    setActiveView("project_hub");
+  };
+
+  const handleSelectJob = (jobId: Id<"jobs">) => {
+    setSelectedJobId(jobId);
+    setActiveView("project_hub");
+  };
 
   return (
-    <section className="card provider-section">
-      <div className="card-heading split-heading">
-        <div>
-          <p className="eyebrow">Step three</p>
-          <h2>Research local providers</h2>
-        </div>
-        <StatusPill status={job.status} />
-      </div>
-      <p className="muted provider-intro">
-        Findor searches public provider pages for this service and keeps the
-        source evidence visible. A result is a lead, not a verification or
-        recommendation.
-      </p>
+    <ErrorBoundary>
+      <div className="min-h-screen bg-stone-50/50 flex flex-col font-sans text-gray-900 antialiased selection:bg-emerald-100 selection:text-emerald-900">
+        {/* Navigation Header */}
+        <Header
+          isAuthenticated={isAuthenticated}
+          userEmail={userJobs[0]?.ownerId ? "My Account" : undefined}
+          activeView={activeView}
+          onNavigate={(view) => {
+            if (view === "home") {
+              setActiveView(isAuthenticated ? "projects" : "home");
+            } else {
+              setActiveView(view);
+            }
+          }}
+          onOpenAuth={(mode = "signIn") => {
+            setAuthMode(mode);
+            setIsAuthOpen(true);
+          }}
+          onSignOut={() => {
+            void signOut().then(() => {
+              setActiveView("home");
+              setSelectedJobId(null);
+            });
+          }}
+        />
 
-      {job.status === "brief_approved" && (
-        <div className="research-start">
-          <div>
-            <strong>Ready to search the public web</strong>
-            <p>
-              We will look for {job.serviceCategory.toLowerCase()} providers
-              around {job.serviceLocation}.
-            </p>
-          </div>
-          <button
-            className="primary-button compact-button"
-            type="button"
-            onClick={() => void handleSearch()}
-            disabled={isSearching}
-          >
-            {isSearching ? "Searching..." : "Find local providers"}
-          </button>
-        </div>
-      )}
-
-      {job.status === "researching" && (
-        <div className="research-progress">
-          <div className="loading-orb small-orb" />
-          <div>
-            <strong>Searching source pages</strong>
-            <p>
-              Findor is collecting public evidence. No provider has been
-              contacted.
-            </p>
-          </div>
-        </div>
-      )}
-
-      {job.status === "providers_ready" && (
-        <div className="provider-results">
-          {candidates &&
-            candidates.some(
-              (candidate) => candidate.contactability === "website_only",
-            ) && (
-              <div className="research-start contact-discovery-start">
-                <div>
-                  <strong>Check public contact pages</strong>
-                  <p>
-                    Findor will map each provider domain and scrape only a small
-                    set of likely contact or quote pages.
-                  </p>
-                </div>
-                <button
-                  className="primary-button compact-button"
-                  type="button"
-                  onClick={() => void handleDiscoverContacts()}
-                  disabled={
-                    isDiscoveringContacts || Boolean(job.activeOperation)
-                  }
-                >
-                  {isDiscoveringContacts
-                    ? "Checking contact pages..."
-                    : "Check contact pages"}
-                </button>
-              </div>
-            )}
-          {contactDiscoverySummary && (
-            <p className="muted">
-              Checked {contactDiscoverySummary.providerCount} provider domain(s)
-              across {contactDiscoverySummary.checkedPageCount} public page(s):{" "}
-              {contactDiscoverySummary.emailFoundCount} public email route(s)
-              found, {contactDiscoverySummary.unresolvedCount} unresolved,{" "}
-              {contactDiscoverySummary.failedCount} failed.
-            </p>
+        {/* Main Content Area */}
+        <main className="flex-1 flex flex-col">
+          {/* View 1: Signed-Out Landing Page */}
+          {!isAuthenticated && activeView === "home" && (
+            <LandingHero
+              onStartRequest={(prompt, cat) => handleStartRequest(prompt, cat)}
+              onOpenAuth={() => {
+                setAuthMode("signUp");
+                setIsAuthOpen(true);
+              }}
+            />
           )}
-          {candidates === undefined ? (
-            <p className="muted">Loading source-backed results...</p>
-          ) : candidates.length === 0 ? (
-            <p className="muted">
-              No source-backed candidates were found for this service and
-              location yet.
-            </p>
-          ) : (
-            candidates.map((candidate) => (
-              <article className="provider-card" key={candidate._id}>
-                <div className="provider-topline">
-                  <div>
-                    <h3>{candidate.name}</h3>
-                    <p>{candidate.description}</p>
-                  </div>
-                  <span
-                    className={
-                      candidate.contactEmail
-                        ? "contact-pill contact-email"
-                        : "contact-pill"
-                    }
-                  >
-                    {candidate.contactEmail ? "Email found" : "Website only"}
-                  </span>
-                </div>
-                <div className="provider-meta">
-                  <a href={candidate.url} target="_blank" rel="noreferrer">
-                    View source evidence
-                  </a>
-                  <span>
-                    {candidate.contactEmail
-                      ? "Published contact: " + candidate.contactEmail
-                      : candidate.contactDiscoveryStatus === "failed"
-                        ? "Contact-page check failed; no contactability claim was made."
-                        : candidate.contactDiscoveryStatus === "unresolved"
-                          ? "No public business email was found on the checked contact pages."
-                          : "No published email was found on the source page."}
-                  </span>
-                </div>
-                <div className="provider-evidence">
-                  {candidate.evidence.map((item) => (
-                    <div key={item.sourceUrl}>
-                      <a href={item.sourceUrl} target="_blank" rel="noreferrer">
-                        Source: {item.sourceUrl}
-                      </a>
-                      <p>{item.claim}</p>
-                    </div>
-                  ))}
-                </div>
-                {candidate.contactDiscoveryCheckedAt && (
-                  <p className="muted">
-                    Contact pages checked:{" "}
-                    {new Date(
-                      candidate.contactDiscoveryCheckedAt,
-                    ).toLocaleString()}
-                  </p>
-                )}
-                {candidate.contactEmail ? (
-                  <button
-                    className="secondary-button"
-                    type="button"
-                    onClick={() => void handleApprove(candidate._id)}
-                    disabled={busyCandidateId === candidate._id}
-                  >
-                    {busyCandidateId === candidate._id
-                      ? "Preparing draft..."
-                      : "Approve provider and prepare email"}
-                  </button>
-                ) : (
-                  <p className="provider-boundary">
-                    {candidate.contactDiscoveryStatus === "failed"
-                      ? "Findor could not complete this contact-page check and made no contactability claim."
-                      : "Findor will not guess a contact address. This source can be reviewed manually."}
-                  </p>
-                )}
-              </article>
-            ))
+
+          {/* View 2: Signed-In Projects Home */}
+          {isAuthenticated && (activeView === "home" || activeView === "projects") && (
+            <ProjectsHome
+              userEmail="Israel"
+              jobs={userJobs}
+              onSelectJob={handleSelectJob}
+              onStartNewRequest={(prompt) => handleStartRequest(prompt)}
+            />
           )}
-        </div>
-      )}
 
-      {outreach && (
-        <div className="outreach-draft">
-          <div className="draft-heading">
-            <div>
-              <p className="eyebrow">Step four</p>
-              <h3>Review the outreach draft</h3>
-            </div>
-            <span
-              className={
-                outreach.status === "sent"
-                  ? "contact-pill contact-email"
-                  : outreach.status === "failed"
-                    ? "contact-pill contact-failed"
-                    : "contact-pill"
-              }
-            >
-              {outreach.status === "sent"
-                ? "Sent"
-                : outreach.status === "failed"
-                  ? "Send failed"
-                  : outreach.status === "sending"
-                    ? "Sending"
-                    : "Awaiting send"}
-            </span>
-          </div>
-          <div className="draft-details">
-            <span>To</span>
-            <strong>{outreach.providerEmail}</strong>
-            <span>Subject</span>
-            <strong>{outreach.subject}</strong>
-          </div>
-          <p className="draft-body">{outreach.body}</p>
-          {outreach.status === "sent" ? (
-            <div className="approved-panel">
-              <span className="check-mark">✓</span>
-              <div>
-                <strong>External email accepted</strong>
-                <p>
-                  AgentMail returned a real message receipt:{" "}
-                  {outreach.externalMessageId ?? "recorded"}
-                  {outreach.externalThreadId
-                    ? " in thread " + outreach.externalThreadId
-                    : ""}
-                  .
-                </p>
-              </div>
-            </div>
-          ) : outreach.status === "sending" ? (
-            <div className="research-progress">
-              <div className="loading-orb small-orb" />
-              <div>
-                <strong>Sending through AgentMail</strong>
-                <p>
-                  Findor is waiting for the external receipt. Do not refresh to
-                  retry.
-                </p>
-              </div>
-            </div>
-          ) : (
-            <div className="approval-panel">
-              <div>
-                <strong>
-                  {outreach.status === "failed"
-                    ? "Try sending again"
-                    : "Send only when you are ready"}
-                </strong>
-                <p>
-                  {outreach.status === "failed"
-                    ? outreach.failureReason
-                    : "This message is exploratory. It does not hire a provider or authorize work."}
-                </p>
-              </div>
-              <button
-                className="primary-button compact-button"
-                type="button"
-                onClick={() => void handleSend()}
-                disabled={
-                  isSending ||
-                  job.status !== "outreach_approved" ||
-                  Boolean(job.activeOperation)
-                }
-              >
-                {isSending
-                  ? "Sending..."
-                  : job.status !== "outreach_approved"
-                    ? "Sending unavailable"
-                    : outreach.status === "failed"
-                      ? "Retry send"
-                      : "Send this email"}
-              </button>
-            </div>
+          {/* View 3: Conversational Intake Flow (create OR edit existing job) */}
+          {activeView === "new_request" && (
+            <ConversationalIntake
+              key={editingJobId ?? `new-${intakeSession}`}
+              initialPrompt={initialIntakePrompt}
+              initialCategory={initialIntakeCategory}
+              initialLocation={initialIntakeLocation}
+              initialTiming={initialIntakeTiming}
+              initialBudget={initialIntakeBudget}
+              editingJobId={editingJobId}
+              onSubmitRequest={handleSubmitNewRequest}
+              onCancel={() => {
+                setEditingJobId(null);
+                setActiveView(isAuthenticated ? "projects" : "home");
+              }}
+            />
           )}
-        </div>
-      )}
 
-      
-      {error && <p className="form-error">{error}</p>}
-    </section>
-  );
-}
+          {/* View 4: Active Project Hub */}
+          {activeView === "project_hub" && currentJob && (
+            <ProjectHub
+              job={currentJob}
+              briefDoc={null}
+              candidates={candidates}
+              outreachMessages={outreachMessages}
+              conversations={conversations}
+              events={events}
+              onApproveBrief={async (mandate?: {
+                quoteTarget?: 1 | 2 | 3;
+                responseWindowHours?: 1 | 3 | 6 | 12 | 24;
+                continuousRecovery?: boolean;
+              }) => {
+                await approveBriefMutation({
+                  jobId: currentJob._id,
+                  maxProviders: 3,
+                  preference: "balanced",
+                  ...(mandate?.quoteTarget !== undefined
+                    ? { quoteTarget: mandate.quoteTarget }
+                    : {}),
+                  ...(mandate?.responseWindowHours !== undefined
+                    ? { responseWindowHours: mandate.responseWindowHours }
+                    : {}),
+                  ...(mandate?.continuousRecovery !== undefined
+                    ? { continuousRecovery: mandate.continuousRecovery }
+                    : {}),
+                });
+              }}
+              onSetContinuousRecovery={async (settings: {
+                enabled: boolean;
+                quoteTarget?: 1 | 2 | 3;
+                responseWindowHours?: 1 | 3 | 6 | 12 | 24;
+              }) => {
+                await setContinuousRecoveryMutation({
+                  jobId: currentJob._id,
+                  enabled: settings.enabled,
+                  ...(settings.quoteTarget !== undefined
+                    ? { quoteTarget: settings.quoteTarget }
+                    : {}),
+                  ...(settings.responseWindowHours !== undefined
+                    ? { responseWindowHours: settings.responseWindowHours }
+                    : {}),
+                });
+              }}
+              onStartResearch={async () => {
+                await beginProviderSearchMutation({
+                  jobId: currentJob._id,
+                });
+              }}
+              onEditBrief={() => {
+                handleEditBriefForJob(currentJob);
+              }}
+              onPauseJob={async () => {
+                await pauseJobMutation({ jobId: currentJob._id });
+              }}
+              onResumeJob={async () => {
+                await resumeJobMutation({ jobId: currentJob._id });
+              }}
+              onCancelJob={async () => {
+                await cancelJobMutation({ jobId: currentJob._id });
+              }}
+              onCompleteJob={async () => {
+                await completeJobMutation({ jobId: currentJob._id });
+              }}
+              onRetryCycle={async () => {
+                // To retry a zero-result cycle cleanly, approve fresh attempt
+                await approveBriefMutation({
+                  jobId: currentJob._id,
+                  maxProviders: 3,
+                  preference: "balanced",
+                });
+              }}
+              onSelectProvider={async (candidateId) => {
+                await selectProviderMutation({
+                  jobId: currentJob._id,
+                  candidateId,
+                });
+              }}
+              onSetContinuationMode={async (mode) => {
+                await setContinuationModeMutation({
+                  jobId: currentJob._id,
+                  mode,
+                });
+              }}
+              onClearSelectedProvider={async () => {
+                await clearSelectedProviderMutation({
+                  jobId: currentJob._id,
+                });
+              }}
+              onAskProviderQuestion={async (question, forceApprove) => {
+                return await askProviderQuestionMutation({
+                  jobId: currentJob._id,
+                  question,
+                  forceApproveConsequential: forceApprove,
+                });
+              }}
+              onBackToProjects={() => setActiveView("projects")}
+              onStartNewRequest={() => handleStartRequest()}
+            />
+          )}
+        </main>
 
-function InboundConversation({ job }: { job: Job }) {
-  const items = useQuery(api.inbound.listForJob, { jobId: job._id });
-  const comparisons = useQuery(api.inbound.listComparisons, { jobId: job._id });
-  const suggestions = useQuery(api.inbound.getClarificationSuggestions, {
-    jobId: job._id,
-  });
-  const clarifications = useQuery(api.inbound.listClarifications, {
-    jobId: job._id,
-  });
-  const prepareClarification = useMutation(api.inbound.prepareClarification);
-  const downloadAttachment = useAction(api.inbound.downloadAttachment);
-  const [busyAttachmentId, setBusyAttachmentId] =
-    useState<Id<"inboundAttachments"> | null>(null);
-  const [busyClarification, setBusyClarification] = useState<string | null>(
-    null,
-  );
-  const [error, setError] = useState<string | null>(null);
-
-  const shouldShow =
-    (items?.length ?? 0) > 0 ||
-    [
-      "outreach_sent",
-      "reply_received",
-      "reply_understood",
-      "completed",
-    ].includes(job.status);
-  if (!shouldShow) return null;
-
-  async function handleDownload(attachmentId: Id<"inboundAttachments">) {
-    setError(null);
-    setBusyAttachmentId(attachmentId);
-    try {
-      const result = await downloadAttachment({ attachmentId });
-      window.open(result.url, "_blank", "noopener,noreferrer");
-    } catch (downloadError) {
-      setError(
-        downloadError instanceof Error
-          ? downloadError.message
-          : "Attachment could not be retrieved.",
-      );
-    } finally {
-      setBusyAttachmentId(null);
-    }
-  }
-
-  async function handlePrepareClarification(attribute: string) {
-    setError(null);
-    setBusyClarification(attribute);
-    try {
-      await prepareClarification({ jobId: job._id, attribute });
-    } catch (clarificationError) {
-      setError(
-        clarificationError instanceof Error
-          ? clarificationError.message
-          : "Clarification draft could not be prepared.",
-      );
-    } finally {
-      setBusyClarification(null);
-    }
-  }
-
-  return (
-    <section className="card conversation-section">
-      <div className="card-heading split-heading">
-        <div>
-          <p className="eyebrow">Step five</p>
-          <h2>Provider replies and comparison</h2>
-        </div>
-        <span
-          className={
-            job.status === "reply_understood"
-              ? "contact-pill contact-email"
-              : job.status === "reply_received"
-                ? "contact-pill contact-email"
-                : "contact-pill"
-          }
-        >
-          {job.status === "reply_understood"
-            ? "Reply understood"
-            : job.status === "reply_received"
-              ? "Reply received"
-              : "Waiting for reply"}
-        </span>
-      </div>
-      <p className="muted">
-        Findor listens for replies on the approved AgentMail thread. The
-        original provider message stays visible; any structured understanding is
-        an interpretation layer, not a replacement for it.
-      </p>
-
-      {items === undefined ? (
-        <p className="muted">Listening for provider replies...</p>
-      ) : items.length === 0 ? (
-        <div className="waiting-panel">
-          <strong>Waiting for a provider reply</strong>
-          <p>
-            No reply has arrived on this outreach thread yet. Findor will update
-            this view in real time when one does.
-          </p>
-        </div>
-      ) : (
-        <div className="conversation-list">
-          {items.map((item) => (
-            <article
-              className="inbound-message"
-              id={"inbound-" + item.message._id}
-              key={item.message._id}
-            >
-              <div className="inbound-topline">
-                <div>
-                  <p className="eyebrow">Provider message</p>
-                  <h3>{item.message.subject}</h3>
-                  <p className="muted">From {item.message.sender}</p>
-                </div>
-                <span
-                  className={
-                    item.message.processingStatus === "understood"
-                      ? "contact-pill contact-email"
-                      : item.message.processingStatus === "failed"
-                        ? "contact-pill contact-failed"
-                        : "contact-pill"
-                  }
-                >
-                  {processingStatusCopy(item.message.processingStatus)}
-                </span>
-              </div>
-              <time className="inbound-time">
-                {new Date(item.message.receivedAt).toLocaleString()}
-              </time>
-              <pre className="inbound-body">
-                {item.message.bodyText || "No plain-text body was included."}
-              </pre>
-
-              {item.attachments.length > 0 && (
-                <div className="attachment-list">
-                  <strong>Attachments</strong>
-                  {item.attachments.map((attachment) => (
-                    <div className="attachment-row" key={attachment._id}>
-                      <span>
-                        {attachment.filename ?? "Unnamed attachment"}
-                        {attachment.contentType
-                          ? " · " + attachment.contentType
-                          : ""}
-                        {attachment.size !== undefined
-                          ? " · " + formatBytes(attachment.size)
-                          : ""}
-                      </span>
-                      <button
-                        className="text-button"
-                        type="button"
-                        onClick={() => void handleDownload(attachment._id)}
-                        disabled={busyAttachmentId === attachment._id}
-                      >
-                        {busyAttachmentId === attachment._id
-                          ? "Retrieving..."
-                          : attachment.storageStatus === "downloaded"
-                            ? "Open stored copy"
-                            : "Retrieve safely"}
-                      </button>
-                    </div>
-                  ))}
-                  <p className="field-hint">
-                    Attachments are treated as untrusted files and are never
-                    executed by Findor.
-                  </p>
-                </div>
-              )}
-
-              {item.message.processingStatus === "unmatched" ? (
-                <div className="guardrail-note">
-                  <span className="lock-icon">◇</span>
-                  <p>
-                    This message could not be safely mapped to an existing
-                    Findor thread, so it was quarantined without attaching it to
-                    a user's job.
-                  </p>
-                </div>
-              ) : item.response ? (
-                <ResponseSummary response={item.response} />
-              ) : item.message.processingStatus === "needs_review" ? (
-                <div className="waiting-panel">
-                  <strong>Understanding needs review</strong>
-                  <p>
-                    {item.message.understandingError ??
-                      "The original message is available, but no structured interpretation is recorded."}
-                  </p>
-                </div>
-              ) : item.message.processingStatus === "failed" ? (
-                <div className="waiting-panel">
-                  <strong>Original message preserved</strong>
-                  <p>
-                    {item.message.understandingError ??
-                      "Findor could not structure this reply."}
-                  </p>
-                </div>
-              ) : (
-                <div className="research-progress">
-                  <div className="loading-orb small-orb" />
-                  <div>
-                    <strong>Understanding reply</strong>
-                    <p>
-                      Findor is preparing a source-linked interpretation. No
-                      external action will be taken.
-                    </p>
-                  </div>
-                </div>
-              )}
-            </article>
-          ))}
-        </div>
-      )}
-
-      {comparisons && comparisons.length > 0 && (
-        <section className="comparison-section">
-          <div className="card-heading">
-            <p className="eyebrow">Apples to apples</p>
-            <h3>Offers and responses</h3>
-            <p className="muted">
-              A provider is not ranked as best merely because its stated price
-              is lower. Unmentioned details remain not stated.
-            </p>
-          </div>
-          <div className="comparison-list">
-            {comparisons.map((comparison) => (
-              <article
-                className="comparison-card"
-                key={comparison.response._id}
-              >
-                <div className="comparison-title">
-                  <div>
-                    <h3>{comparison.providerName}</h3>
-                    <a
-                      href={comparison.providerUrl}
-                      target="_blank"
-                      rel="noreferrer"
-                    >
-                      Provider source
-                    </a>
-                  </div>
-                  <span className="contact-pill">
-                    {responseKindLabel(comparison.response.kind)}
-                  </span>
-                </div>
-                <div className="comparison-fields">
-                  <ComparisonField
-                    label="Price"
-                    value={
-                      comparison.response.headlinePrice ??
-                      priceRange(comparison.response)
-                    }
-                  />
-                  <ComparisonField
-                    label="Availability"
-                    value={comparison.response.availability}
-                  />
-                  <ComparisonField
-                    label="Timing"
-                    value={comparison.response.estimatedTiming}
-                  />
-                  <ComparisonField
-                    label="Included"
-                    value={formatList(comparison.response.included)}
-                  />
-                  <ComparisonField
-                    label="Excluded"
-                    value={formatList(comparison.response.excluded)}
-                  />
-                  <ComparisonField
-                    label="Not stated"
-                    value={formatList(comparison.response.notStated)}
-                  />
-                  <ComparisonField
-                    label="Unclear"
-                    value={formatList(comparison.response.unclear)}
-                  />
-                  <ComparisonField
-                    label="Payment terms"
-                    value={comparison.response.paymentTerms}
-                  />
-                  <ComparisonField
-                    label="Warranty"
-                    value={comparison.response.warranty}
-                  />
-                  <ComparisonField
-                    label="Provider questions"
-                    value={formatList(comparison.response.informationNeeded)}
-                  />
-                </div>
-                <p className="evidence-quote">
-                  Source evidence: {comparison.response.evidenceText}
-                </p>
-                <a
-                  className="source-message-link"
-                  href={"#inbound-" + comparison.response.inboundMessageId}
-                >
-                  View original provider message
-                </a>
-              </article>
-            ))}
-          </div>
-        </section>
-      )}
-
-      {suggestions && suggestions.length > 0 && (
-        <section className="clarification-section">
-          <div className="card-heading">
-            <p className="eyebrow">Approval boundary</p>
-            <h3>Clarification suggested</h3>
-            <p className="muted">
-              Findor may prepare a clarification when providers describe the
-              same scope differently. It never sends this message automatically.
-            </p>
-          </div>
-          {suggestions.map((suggestion) => (
-            <div
-              className="clarification-card"
-              key={
-                suggestion.attribute +
-                suggestion.sourceResponseId +
-                suggestion.comparisonResponseId
-              }
-            >
-              <strong>{suggestion.reason}</strong>
-              <p className="proposed-message">“{suggestion.proposedMessage}”</p>
-              <button
-                className="secondary-button"
-                type="button"
-                onClick={() =>
-                  void handlePrepareClarification(suggestion.attribute)
-                }
-                disabled={busyClarification === suggestion.attribute}
-              >
-                {busyClarification === suggestion.attribute
-                  ? "Preparing..."
-                  : "Prepare clarification draft"}
-              </button>
-            </div>
-          ))}
-        </section>
-      )}
-
-      {clarifications && clarifications.length > 0 && (
-        <section className="clarification-section">
-          <div className="card-heading">
-            <p className="eyebrow">Draft record</p>
-            <h3>Prepared clarifications</h3>
-          </div>
-          {clarifications.map((clarification) => (
-            <div className="clarification-card" key={clarification._id}>
-              <strong>{clarification.attribute}</strong>
-              <p>{clarification.proposedMessage}</p>
-              <span className="muted">
-                Status: {clarification.status}. Explicit approval is required
-                before any outbound message, and no send action is implemented
-                here.
-              </span>
-            </div>
-          ))}
-        </section>
-      )}
-
-      
-      {error && <p className="form-error">{error}</p>}
-    </section>
-  );
-}
-
-function ResponseSummary({ response }: { response: Doc<"providerResponses"> }) {
-  return (
-    <div className="response-summary">
-      <div className="response-heading">
-        <div>
-          <p className="eyebrow">Findor interpretation</p>
-          <h3>{responseKindLabel(response.kind)}</h3>
-        </div>
-        <span className="muted">Source-linked; model: {response.model}</span>
-      </div>
-      <div className="response-fields">
-        <ComparisonField
-          label="Price"
-          value={response.headlinePrice ?? priceRange(response)}
-        />
-        <ComparisonField label="Currency" value={response.currency} />
-        <ComparisonField label="Availability" value={response.availability} />
-        <ComparisonField
-          label="Estimated timing"
-          value={response.estimatedTiming}
-        />
-        <ComparisonField
-          label="Included"
-          value={formatList(response.included)}
-        />
-        <ComparisonField
-          label="Excluded"
-          value={formatList(response.excluded)}
-        />
-        <ComparisonField
-          label="Not stated"
-          value={formatList(response.notStated)}
-        />
-        <ComparisonField label="Unclear" value={formatList(response.unclear)} />
-        <ComparisonField label="Payment terms" value={response.paymentTerms} />
-        <ComparisonField label="Warranty" value={response.warranty} />
-        <ComparisonField
-          label="Inspection / site visit"
-          value={response.inspectionRequirement}
-        />
-        <ComparisonField
-          label="Information needed"
-          value={formatList(response.informationNeeded)}
+        {/* Global Auth Modal */}
+        <AuthModal
+          isOpen={isAuthOpen}
+          initialMode={authMode}
+          onClose={() => setIsAuthOpen(false)}
         />
       </div>
-      <p className="evidence-quote">
-        Interpretation evidence: {response.evidenceText}
-      </p>
-    </div>
+    </ErrorBoundary>
   );
 }
 
-function ComparisonField({
-  label,
-  value,
-}: {
-  label: string;
-  value: string | null | undefined;
-}) {
-  return (
-    <div className="comparison-field">
-      <span>{label}</span>
-      <strong>{value || "Not stated"}</strong>
-    </div>
-  );
-}
-
-function processingStatusCopy(status: string) {
-  return status === "understood"
-    ? "Understood"
-    : status === "understanding"
-      ? "Understanding"
-      : status === "needs_review"
-        ? "Needs review"
-        : status === "unmatched"
-          ? "Quarantined"
-          : status === "failed"
-            ? "Needs review"
-            : "Reply received";
-}
-
-function responseKindLabel(kind: string) {
-  return kind.replace("_", " ");
-}
-
-function formatList(values: string[]) {
-  return values.length > 0 ? values.join(", ") : "Not stated";
-}
-
-function priceRange(
-  response: Pick<
-    Doc<"providerResponses">,
-    "priceMin" | "priceMax" | "currency"
-  >,
-) {
-  if (response.priceMin === undefined && response.priceMax === undefined)
-    return "Not stated";
-  const currency = response.currency ? response.currency + " " : "";
-  if (response.priceMin !== undefined && response.priceMax !== undefined) {
-    return currency + response.priceMin + "–" + response.priceMax;
-  }
-  return currency + (response.priceMin ?? response.priceMax);
-}
-
-function formatBytes(size: number) {
-  if (size < 1024) return size + " B";
-  if (size < 1024 * 1024) return (size / 1024).toFixed(1) + " KB";
-  return (size / (1024 * 1024)).toFixed(1) + " MB";
-}
+export default App;

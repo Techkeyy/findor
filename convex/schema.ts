@@ -9,6 +9,8 @@ const responseKindValidator = v.union(
   v.literal("decline"),
   v.literal("acknowledgement"),
   v.literal("other"),
+  v.literal("mixed"),
+  v.literal("unclear"),
 );
 
 const jobStatusValidator = v.union(
@@ -25,6 +27,14 @@ const jobStatusValidator = v.union(
   v.literal("cancelled"),
   v.literal("completed"),
   v.literal("failed"),
+  v.literal("needs_user"),
+);
+
+const executionStatusValidator = v.union(
+  v.literal("active"),
+  v.literal("paused"),
+  v.literal("cancelled"),
+  v.literal("completed"),
 );
 
 const resumableJobStatusValidator = v.union(
@@ -38,12 +48,58 @@ const resumableJobStatusValidator = v.union(
   v.literal("reply_received"),
   v.literal("reply_understood"),
   v.literal("failed"),
+  v.literal("needs_user"),
 );
 
 const activeOperationValidator = v.union(
   v.literal("provider_search"),
   v.literal("contact_discovery"),
   v.literal("outreach_send"),
+  v.literal("recovery_search"),
+);
+
+const structuredLocationValidator = v.object({
+  country: v.string(),
+  countryCode: v.string(),
+  region: v.optional(v.string()),
+  city: v.string(),
+  locality: v.optional(v.string()),
+  postalCode: v.optional(v.string()),
+});
+
+const autonomyValidator = v.object({
+  enabled: v.boolean(),
+  maxProviders: v.number(),
+  allowInitialOutreach: v.boolean(),
+  allowRoutineClarifications: v.boolean(),
+  allowFollowUp: v.boolean(),
+  maxFollowUps: v.number(),
+  preference: v.union(
+    v.literal("balanced"),
+    v.literal("price"),
+    v.literal("earliest_availability"),
+    v.literal("complete_quote"),
+  ),
+  includePreviouslyContacted: v.optional(v.boolean()),
+  approvedAt: v.number(),
+  // Continuous quote-recovery mandate (explicit owner authorization only).
+  quoteTarget: v.optional(v.union(v.literal(1), v.literal(2), v.literal(3))),
+  responseWindowHours: v.optional(
+    v.union(v.literal(1), v.literal(3), v.literal(6), v.literal(12), v.literal(24)),
+  ),
+  continuousRecoveryEnabled: v.optional(v.boolean()),
+});
+
+const providerResolutionValidator = v.union(
+  v.literal("waiting"),
+  v.literal("replied"),
+  v.literal("declined"),
+  v.literal("delivery_failed"),
+  v.literal("no_response"),
+  v.literal("send_failed"),
+  v.literal("paused"),
+  v.literal("cancelled"),
+  v.literal("needs_user"),
 );
 export default defineSchema({
   ...authTables,
@@ -53,6 +109,7 @@ export default defineSchema({
     jobTitle: v.string(),
     naturalLanguageDescription: v.string(),
     serviceLocation: v.string(),
+    structuredLocation: v.optional(structuredLocationValidator),
     desiredTiming: v.string(),
     budgetOrContext: v.string(),
     structuredRequirements: v.object({
@@ -65,15 +122,19 @@ export default defineSchema({
       ),
     }),
     status: jobStatusValidator,
+    executionStatus: v.optional(executionStatusValidator),
     pausedFromStatus: v.optional(resumableJobStatusValidator),
     activeOperation: v.optional(activeOperationValidator),
     missingFields: v.array(v.string()),
+    currentBriefVersion: v.optional(v.number()),
+    currentCycleId: v.optional(v.id("jobCycles")),
     brief: v.optional(
       v.object({
         projectSummary: v.string(),
         serviceCategory: v.string(),
         requestedOutcome: v.string(),
         serviceLocation: v.string(),
+        structuredLocation: v.optional(structuredLocationValidator),
         desiredTiming: v.string(),
         budgetOrContext: v.string(),
         structuredRequirements: v.array(
@@ -86,6 +147,21 @@ export default defineSchema({
       }),
     ),
     briefApprovedAt: v.optional(v.number()),
+    autonomy: v.optional(autonomyValidator),
+    recoveryEnabled: v.optional(v.boolean()),
+    recoveryDiscoveryCycles: v.optional(v.number()),
+    autonomyStopReason: v.optional(v.string()),
+    selectedCandidateId: v.optional(v.id("providerCandidates")),
+    continuationMode: v.optional(
+      v.union(v.literal("findor_assisted"), v.literal("user_takeover")),
+    ),
+    // Client-generated idempotency key for one intake submission.
+    // Retries/double-clicks carrying the same key reuse the original job.
+    clientRequestId: v.optional(v.string()),
+    // Continuous recovery scheduler state (deadline-driven, idempotent).
+    nextRecoveryAt: v.optional(v.number()),
+    recoveryGeneration: v.optional(v.number()),
+    recoverySchedulerId: v.optional(v.id("_scheduled_functions")),
     createdAt: v.number(),
     updatedAt: v.number(),
   })
@@ -99,6 +175,7 @@ export default defineSchema({
       v.literal("intake_updated"),
       v.literal("brief_generated"),
       v.literal("brief_approved"),
+      v.literal("autonomy_approved"),
       v.literal("research_started"),
       v.literal("research_completed"),
       v.literal("research_failed"),
@@ -108,23 +185,63 @@ export default defineSchema({
       v.literal("provider_approved"),
       v.literal("outreach_sent"),
       v.literal("outreach_failed"),
+      v.literal("autonomous_action_blocked"),
+      v.literal("follow_up_scheduled"),
+      v.literal("follow_up_due"),
+      v.literal("follow_up_skipped"),
+      v.literal("follow_up_failed"),
+      v.literal("follow_up_sent"),
+      v.literal("routine_clarification_sent"),
+      v.literal("routine_question_sent"),
+      v.literal("consequential_action_blocked"),
+      v.literal("consequential_action_approved"),
+      v.literal("provider_selected"),
+      v.literal("continuation_selected"),
+      v.literal("user_takeover"),
+      v.literal("let_findor_help_again"),
       v.literal("job_paused"),
       v.literal("job_resumed"),
       v.literal("job_cancelled"),
       v.literal("job_completed"),
       v.literal("inbound_received"),
+      v.literal("delivery_failed"),
+      v.literal("provider_no_response"),
+      v.literal("recovery_research_started"),
+      v.literal("recovery_research_completed"),
+      v.literal("recovery_research_failed"),
+      v.literal("provider_replacement_queued"),
+      v.literal("recovery_enabled"),
+      v.literal("recovery_scheduled"),
+      v.literal("recovery_stopped"),
+      v.literal("recovery_target_reached"),
+      v.literal("country_code_repaired"),
       v.literal("inbound_understood"),
       v.literal("inbound_processing_failed"),
+      v.literal("brief_version_created"),
+      v.literal("cycle_prepared"),
+      v.literal("cycle_approved"),
+      v.literal("cycle_started"),
+      v.literal("cycle_waiting"),
+      v.literal("cycle_options_ready"),
+      v.literal("cycle_exhausted_no_options"),
+      v.literal("cycle_exhausted_partial"),
+      v.literal("cycle_cancelled"),
+      v.literal("cycle_completed"),
     ),
+    cycleId: v.optional(v.id("jobCycles")),
     message: v.string(),
     createdAt: v.number(),
   }).index("by_job_and_createdAt", ["jobId", "createdAt"]),
   providerCandidates: defineTable({
     jobId: v.id("jobs"),
     ownerId: v.id("users"),
+    cycleId: v.optional(v.id("jobCycles")),
     name: v.string(),
     url: v.string(),
     description: v.string(),
+    entityType: v.optional(
+      v.union(v.literal("provider"), v.literal("discovery_source")),
+    ),
     contactability: v.union(
       v.literal("email_found"),
       v.literal("website_only"),
@@ -146,16 +263,27 @@ export default defineSchema({
       }),
     ),
     discoveredAt: v.number(),
-  }).index("by_job_and_discoveredAt", ["jobId", "discoveredAt"]),
+  })
+    .index("by_job_and_discoveredAt", ["jobId", "discoveredAt"])
+    .index("by_job_and_cycle_and_discoveredAt", ["jobId", "cycleId", "discoveredAt"]),
   outreachMessages: defineTable({
     jobId: v.id("jobs"),
     ownerId: v.id("users"),
     candidateId: v.id("providerCandidates"),
+    cycleId: v.optional(v.id("jobCycles")),
     status: v.union(
       v.literal("approved"),
       v.literal("sending"),
       v.literal("sent"),
+      v.literal("delivery_failed"),
       v.literal("failed"),
+    ),
+    purpose: v.optional(
+      v.union(
+        v.literal("initial"),
+        v.literal("routine_clarification"),
+        v.literal("follow_up"),
+      ),
     ),
     providerEmail: v.string(),
     subject: v.string(),
@@ -163,17 +291,44 @@ export default defineSchema({
     externalMessageId: v.optional(v.string()),
     externalThreadId: v.optional(v.string()),
     failureReason: v.optional(v.string()),
+    providerResolution: v.optional(providerResolutionValidator),
+    finalResponseCheckAt: v.optional(v.number()),
+    finalResponseCheckScheduledFunctionId: v.optional(v.id("_scheduled_functions")),
+    followUpCount: v.optional(v.number()),
+    nextFollowUpAt: v.optional(v.number()),
+    followUpState: v.optional(
+      v.union(
+        v.literal("scheduling"),
+        v.literal("scheduled"),
+        v.literal("due"),
+        v.literal("skipped"),
+        v.literal("cancelled"),
+        v.literal("sent"),
+        v.literal("failed"),
+      ),
+    ),
+    followUpScheduledFunctionId: v.optional(v.id("_scheduled_functions")),
+    followUpOutreachId: v.optional(v.id("outreachMessages")),
+    followUpFailureReason: v.optional(v.string()),
+    parentOutreachId: v.optional(v.id("outreachMessages")),
+    clarificationId: v.optional(v.id("clarificationDrafts")),
+    sendAttemptCount: v.optional(v.number()),
+    lastAttemptAt: v.optional(v.number()),
     createdAt: v.number(),
     updatedAt: v.number(),
   })
     .index("by_job_and_createdAt", ["jobId", "createdAt"])
     .index("by_externalThreadId", ["externalThreadId"])
-    .index("by_externalMessageId", ["externalMessageId"]),
+    .index("by_externalMessageId", ["externalMessageId"])
+    .index("by_parentOutreachId", ["parentOutreachId"])
+    .index("by_clarificationId", ["clarificationId"])
+    .index("by_job_and_cycle_and_createdAt", ["jobId", "cycleId", "createdAt"]),
   inboundMessages: defineTable({
     ownerId: v.optional(v.id("users")),
     jobId: v.optional(v.id("jobs")),
     providerId: v.optional(v.id("providerCandidates")),
     outreachId: v.optional(v.id("outreachMessages")),
+    cycleId: v.optional(v.id("jobCycles")),
     inboxId: v.string(),
     svixId: v.string(),
     eventId: v.string(),
@@ -189,11 +344,25 @@ export default defineSchema({
       v.literal("received"),
       v.literal("understanding"),
       v.literal("understood"),
+      v.literal("delivery_failed"),
       v.literal("needs_review"),
       v.literal("unmatched"),
       v.literal("failed"),
     ),
     responseKind: v.optional(responseKindValidator),
+    inReplyTo: v.optional(v.string()),
+    references: v.optional(v.array(v.string())),
+    autorespondSubject: v.optional(v.string()),
+    isAutoReply: v.optional(v.boolean()),
+    lineageProof: v.optional(
+      v.union(
+        v.literal("tier_1_thread_id"),
+        v.literal("tier_2_in_reply_to"),
+        v.literal("tier_3_references"),
+        v.literal("tier_4_conversation_membership"),
+        v.literal("unproven"),
+      ),
+    ),
     understandingError: v.optional(v.string()),
     createdAt: v.number(),
     updatedAt: v.number(),
@@ -207,6 +376,7 @@ export default defineSchema({
     jobId: v.optional(v.id("jobs")),
     providerId: v.optional(v.id("providerCandidates")),
     outreachId: v.optional(v.id("outreachMessages")),
+    cycleId: v.optional(v.id("jobCycles")),
     inboundMessageId: v.id("inboundMessages"),
     externalMessageId: v.string(),
     externalAttachmentId: v.string(),
@@ -234,8 +404,21 @@ export default defineSchema({
     providerId: v.id("providerCandidates"),
     outreachId: v.id("outreachMessages"),
     inboundMessageId: v.id("inboundMessages"),
+    cycleId: v.optional(v.id("jobCycles")),
+    // Brief version the quoted request belonged to. Late replies count
+    // toward the quote target only when this matches the current brief.
+    briefVersion: v.optional(v.number()),
     kind: responseKindValidator,
     headlinePrice: v.optional(v.string()),
+    priceQualifier: v.optional(
+      v.union(
+        v.literal("exact"),
+        v.literal("estimate"),
+        v.literal("starting_from"),
+        v.literal("range"),
+        v.literal("unknown"),
+      ),
+    ),
     priceMin: v.optional(v.number()),
     priceMax: v.optional(v.number()),
     currency: v.optional(v.string()),
@@ -252,6 +435,20 @@ export default defineSchema({
     inspectionRequirement: v.optional(v.string()),
     importantNotes: v.array(v.string()),
     evidenceText: v.string(),
+    summary: v.optional(v.string()),
+    confidence: v.optional(
+      v.union(v.literal("high"), v.literal("medium"), v.literal("low")),
+    ),
+    requestedSensitiveInformation: v.optional(v.array(v.string())),
+    requestedCommitments: v.optional(v.array(v.string())),
+    evidence: v.optional(
+      v.array(
+        v.object({
+          field: v.string(),
+          excerpt: v.string(),
+        }),
+      ),
+    ),
     model: v.string(),
     createdAt: v.number(),
     updatedAt: v.number(),
@@ -266,14 +463,98 @@ export default defineSchema({
     proposedMessage: v.string(),
     sourceResponseId: v.id("providerResponses"),
     comparisonResponseId: v.id("providerResponses"),
+    cycleId: v.optional(v.id("jobCycles")),
     status: v.union(
       v.literal("suggested"),
       v.literal("approved"),
       v.literal("cancelled"),
+      v.literal("sent"),
+      v.literal("failed"),
     ),
     createdAt: v.number(),
     updatedAt: v.number(),
   })
     .index("by_jobId_and_createdAt", ["jobId", "createdAt"])
     .index("by_jobId_and_attribute", ["jobId", "attribute"]),
+  briefVersions: defineTable({
+    ownerId: v.id("users"),
+    jobId: v.id("jobs"),
+    version: v.number(),
+    serviceCategory: v.string(),
+    jobTitle: v.string(),
+    naturalLanguageDescription: v.string(),
+    serviceLocation: v.string(),
+    structuredLocation: v.optional(structuredLocationValidator),
+    desiredTiming: v.string(),
+    budgetOrContext: v.string(),
+    structuredRequirements: v.object({
+      rawDetails: v.string(),
+      keyDetails: v.array(
+        v.object({ label: v.string(), value: v.string() }),
+      ),
+    }),
+    brief: v.object({
+      projectSummary: v.string(),
+      serviceCategory: v.string(),
+      requestedOutcome: v.string(),
+      serviceLocation: v.string(),
+      structuredLocation: v.optional(structuredLocationValidator),
+      desiredTiming: v.string(),
+      budgetOrContext: v.string(),
+      structuredRequirements: v.array(
+        v.object({ label: v.string(), value: v.string() }),
+      ),
+      unknowns: v.array(v.string()),
+    }),
+    reason: v.union(v.literal("initial"), v.literal("edit"), v.literal("rerun")),
+    createdAt: v.number(),
+  }).index("by_job_and_version", ["jobId", "version"]),
+  jobCycles: defineTable({
+    ownerId: v.id("users"),
+    jobId: v.id("jobs"),
+    cycleNumber: v.number(),
+    briefVersion: v.number(),
+    mandateSnapshot: v.object({
+      enabled: v.boolean(),
+      maxProviders: v.number(),
+      allowInitialOutreach: v.boolean(),
+      allowRoutineClarifications: v.boolean(),
+      allowFollowUp: v.boolean(),
+      maxFollowUps: v.number(),
+      preference: v.union(
+        v.literal("balanced"),
+        v.literal("price"),
+        v.literal("earliest_availability"),
+        v.literal("complete_quote"),
+      ),
+      includePreviouslyContacted: v.boolean(),
+      approvedAt: v.optional(v.number()),
+      quoteTarget: v.optional(v.union(v.literal(1), v.literal(2), v.literal(3))),
+      responseWindowHours: v.optional(
+        v.union(v.literal(1), v.literal(3), v.literal(6), v.literal(12), v.literal(24)),
+      ),
+      continuousRecoveryEnabled: v.optional(v.boolean()),
+    }),
+    maxProviders: v.number(),
+    startedAt: v.optional(v.number()),
+    endedAt: v.optional(v.number()),
+    status: v.union(
+      v.literal("draft"),
+      v.literal("awaiting_approval"),
+      v.literal("active"),
+      v.literal("waiting"),
+      v.literal("options_ready"),
+      v.literal("exhausted_no_options"),
+      v.literal("exhausted_partial"),
+      v.literal("cancelled"),
+      v.literal("completed"),
+    ),
+    outcomeSummary: v.optional(v.string()),
+    recoveryEnabled: v.boolean(),
+    recoveryDiscoveryCycles: v.number(),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_job_and_cycleNumber", ["jobId", "cycleNumber"])
+    .index("by_job_and_updatedAt", ["jobId", "updatedAt"]),
 });

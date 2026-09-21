@@ -7,9 +7,10 @@ const app = defineApp({
     FIRECRAWL_API_KEY: v.optional(v.string()),
     AGENTMAIL_API_KEY: v.optional(v.string()),
     AGENTMAIL_INBOX_ID: v.optional(v.string()),
+    AUTH_RESET_INBOX_ID: v.optional(v.string()),
     AGENTMAIL_WEBHOOK_SECRET: v.optional(v.string()),
     OPENAI_API_KEY: v.optional(v.string()),
-    OPENAI_MODEL: v.optional(v.string()),
+    SITE_URL: v.optional(v.string()),
   },
 });
 

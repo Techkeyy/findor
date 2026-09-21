@@ -4,7 +4,7 @@ This file is the engineering truth for Findor. It records the locked product
 scope, the evidence required to move between phases, and the difference between
 implemented behavior and planned behavior.
 
-Last reviewed: 2026-09-13
+Last reviewed: 2026-09-14
 Current owner: Findor build team
 Product: Findor
 Supported scope: generic local-service procurement; roof replacement is the first live campaign
@@ -300,8 +300,8 @@ recovery.
 
 REAL EVIDENCE:
 
-- npx convex dev --once completed successfully against the personal
-  development deployment flexible-rook-428 after the generic provider-source
+ npx convex dev --once completed successfully against the personal
+  development Convex deployment after the generic provider-source
   filter and evidence UI update.
 - npm run typecheck, npm run lint, and npm run build completed successfully.
   Vite emitted its existing future config-loader warning about __dirname in
@@ -346,8 +346,8 @@ provider candidates, guessed email, fake delivery receipt, or simulated
 external email was presented as real.
 
 LOCAL OR PRODUCTION DISTINCTION: The backend update and live integration run
-used the personal Convex development deployment flexible-rook-428 and local
-frontend 127.0.0.1:5174. The public convex.site frontend and production
+used the personal Convex development deployment and a local frontend preview.
+The public convex.site frontend and production
 deployment are not deployed.
 
 SECURITY IMPACT: Ownership is derived server-side with Convex Auth. Public
@@ -487,7 +487,8 @@ The Moving live run therefore proved real search, evidence retention, and
 bounded same-domain lookup, but it did not satisfy the stricter requirement
 that every retained card be a genuine local provider. A generic host filter
 correction for `forbes.com` and `hireahelper.com` is staged locally in
-`convex/providerResearch.ts`; publishing that code to `flexible-rook-428` was
+`convex/providerResearch.ts`; publishing that code to the development Convex
+deployment was
 not performed because the current verification authorization did not explicitly
 authorize a new code deployment. The live deployed result must remain recorded
 as a partial failure, not silently reclassified as passing.
@@ -582,7 +583,7 @@ obtain separate explicit authorization before any real AgentMail send.
 
 DEPLOYMENT: The inspected generic publisher/comparison-marketplace filter was
 deployed successfully to the personal Convex development deployment
-`flexible-rook-428`; Convex reported that functions were ready. Post-deployment
+reported that functions were ready. Post-deployment
 typecheck, lint, and build passed.
 
 CORRECTED MOVING RUN: The normal UI rerun retained three legitimate provider-
@@ -668,9 +669,9 @@ LOCAL EVIDENCE:
 - The required local project-specific UX skills named in the director package are not installed in this workspace; the corresponding audits were performed directly and this absence is recorded rather than hidden.
 
 DEPLOYMENT AND UAT:
-- The existing development target is flexible-rook-428. Two attempts to push the Day 3 backend with npx convex dev --once failed before deployment during Convex authorization/network fetch with connect ETIMEDOUT. No code/schema error was reported, but deployed verification of the Day 3 UX remains pending.
+ Two attempts to push the Day 3 backend with npx convex dev --once failed before deployment during Convex authorization/network fetch with connect ETIMEDOUT. No code/schema error was reported, but deployed verification of the Day 3 UX remains pending.
 - No production deployment was attempted. The public convex.site app is not deployed, and production UAT has not started.
-- The optional OpenAI interpreter remains fail-safe and is not a release blocker. No OpenAI live proof was run.
+ The OpenAI interpreter is server-only and fail-closed. A bounded connectivity proof is recorded separately; genuine provider-reply UAT remains owner-controlled.
 
 14-GATE STATUS:
 1. Generic local-service product contract: PASS by accepted Day 1 evidence.
@@ -702,7 +703,7 @@ EVIDENCE:
 - @convex-dev/static-hosting was installed and configured. Existing auth and /agentmail/webhook routes remain registered before the static catch-all.
 - Local post-wiring typecheck, lint, tests, and build all pass. The official static-hosting deploy script is present as npm run deploy.
 - Public convex.site publication was not completed because the deployment command requires a direct active-turn confirmation for the external publication action. No workaround was attempted.
-- A local npx convex codegen run during component setup uploaded the generated hosting component definitions to the currently selected development deployment flexible-rook-428; no data deletion, production frontend upload, or external email action occurred. This is recorded as an unintended dev-side effect and is not claimed as a clean dev-unchanged result.
+ A local npx convex codegen run during component setup uploaded the generated hosting component definitions to the selected development deployment; no data deletion, production frontend upload, or external email action occurred. This is recorded as an unintended dev-side effect and is not claimed as a clean dev-unchanged result.
 - Production environment variable values, production webhook migration, and clean-user production UAT remain pending until the public frontend and production configuration are available.
 
 REMAINING RELEASE GATES:
@@ -763,3 +764,336 @@ REMAINING REVIEW BOUNDARY:
 - The repository contains no AgentMail recipient, message identifier, thread identifier, API key, webhook secret, private key, cookie, password, or exact residential address from the live work package.
 - README and hackathon.md now point to the live production app and public source repository. No social publication or hackathon submission was performed.
 - Final stop boundary: director review is required before any social post, hackathon submission, or new external commitment. The optional OpenAI integration remains fail-safe and is not a release blocker.
+## Master director standard checkpoint — 2026-09-13
+
+STATUS: **BUILDING / UAT READY**, not RELEASE READY, SUBMISSION READY, or FINISHED.
+
+AUTHORITATIVE GATE RESULT:
+
+- The read-only inspection of the previously approved Altitude thread found no matching thread for the approved subject, and production Convex has no persisted sent-outreach record for that path. No database state was edited and no message was sent. Required status: `ALTITUDE_STATUS = WAITING_FOR_EXTERNAL_REPLY`.
+- The real inbound journey remains unproven. The signed production webhook, thread mapping, deduplication, quarantine, authenticated queries, and UI are implemented and regression-tested, but no genuine provider reply has been received through the deployed chain.
+- The optional OpenAI provider-response interpreter remains fail-safe and is not a release blocker.
+
+SECOND CAMPAIGN PREPARATION (NO SEND):
+
+- A fresh ordinary-user production run used generic `Residential cleaning`, a two-bedroom Austin request for next week, and no exact residential address.
+- Real Firecrawl retained three relevant candidates with source URLs. The strongest source-backed contactable candidate is Tidy Hands Cleaners, `https://www.tidyhandstx.com/`, with public business email `support@tidyhandstx.com` supported by the exact retrieved source URL `https://www.tidyhandstx.com/`.
+- The other retained candidates were Care.com Austin cleaning (`https://www.care.com/house-cleaning/austin-tx`) and Maids and Moore (`https://maidsandmoore.com/`); both remain website-only because no public business email was supported by retrieved evidence.
+- Tidy Hands was approved only to prepare an unsent draft. Subject: `Residential cleaning inquiry`. No AgentMail message or thread identifier was created during this work package.
+- A second real provider outreach requires separate director authorization. No new provider email, follow-up, clarification, booking, payment, quote acceptance, social post, or hackathon submission was performed.
+
+AUDIT ARTIFACTS:
+
+ [MANUAL_UAT.md](MANUAL_UAT.md) is the owner-facing production walkthrough and stops before `Send this email`.
+ [PRODUCT_PROMISE_MATRIX.md](PRODUCT_PROMISE_MATRIX.md) separates UI, backend, real integration, production, recovery, owner-UAT, and final status.
+- Convex production read-only insights returned no issues over the last 72 hours. Deployed function metadata confirms authenticated job/provider/outreach/inbound entry points and internal-only receipt/webhook transitions.
+- Source audit found no hard-coded Altitude/provider identifiers in product code. Ownership checks are present on jobs, providers, outreach, inbound mapping, attachments, and recovery actions. Deterministic tests cover unauthenticated access, wrong-user isolation, website-only blocking, send-claim locking, failed-state truthfulness, inbound deduplication/quarantine, and recovery controls.
+
+REMAINING RELEASE GATES:
+
+1. Owner manual UAT on production is pending.
+2. A genuine external provider reply is pending; the full inbound-to-comparison journey is not PASS.
+3. The second campaign is prepared but unsent; director authorization is required before any new AgentMail send.
+4. Social publication and final hackathon submission remain out of scope.
+
+NEXT SAFE STEP: Give the owner [MANUAL_UAT.md](MANUAL_UAT.md) for manual production review and wait for a genuine reply. Stop at the outbound boundary for director review.
+
+## Generic marketplace-filter correction and production recheck — 2026-09-13
+
+STATUS: **UAT READY = YES; UAT PASS = NO.** Owner manual UAT has not started.
+
+CORRECTION:
+
+- Added `care.com` to the existing generic rejected-host policy used for directory, marketplace, publisher, and comparison pages in `convex/providerResearch.ts`.
+- No cleaning-specific branch, hard-coded cleaning page, giant classifier, or database patch was added.
+- Source evidence and truthful contactability rules remain unchanged for retained providers.
+
+VERIFICATION:
+
+- `npm run typecheck`: PASS.
+- `npm run lint`: PASS.
+- `npm test -- --run`: PASS, 11 tests across 2 files.
+- `npm run build`: PASS.
+- Production deploy: PASS to `laudable-fly-396`; backend and four static files published at `https://laudable-fly-396.convex.site`.
+- Fresh generic Residential cleaning production discovery through the normal UI: PASS. Exactly one provider search and one bounded contact-page check were performed. No email was sent.
+
+EXACT PRODUCTION PROVIDER RESULTS:
+
+1. Tidy Hands Cleaners: Top-Rated Cleaning Services Austin, TX — `https://www.tidyhandstx.com/` — `email_found`.
+2. Austin House Cleaning & Maid Services | The Cleaning Authority — `https://www.thecleaningauthority.com/austin/` — `website_only`.
+3. Maids and Moore: Top-Rated Residential Cleaning Company in ... — `https://maidsandmoore.com/` — `website_only`.
+4. House Cleaning Services in Austin, Texas - Spruce — `https://getspruce.com/austin-cleaning-service/` — `email_found`.
+
+- Care.com is absent; no `care.com` URL was retained.
+- Tidy Hands and Maids and Moore survived and remained relevant individual provider/business results.
+- Legitimate providers were not removed. Source URLs/descriptions remained attached.
+- Website-only providers did not receive an automated email approval path.
+
+TIDY HANDS CONTACT EVIDENCE:
+
+- Provider: Tidy Hands Cleaners.
+- Public business recipient: `support@tidyhandstx.com`.
+- Exact evidence source: `https://www.tidyhandstx.com/`.
+- The retrieved source visibly published the address as a public business contact route. It was not inferred.
+
+FRESH UNSENT DRAFT STATE:
+
+- A new ordinary-user production job was used; no prior production IDs were reconstructed or patched.
+- Tidy Hands was approved only through the normal UI to prepare a draft.
+- The new draft exists in a valid production state with recipient `support@tidyhandstx.com`, subject `Residential cleaning inquiry`, and status unsent.
+- No AgentMail message or thread ID was created.
+
+THREAD-MAPPING ACCEPTANCE:
+
+- The previous Altitude send is not the final production inbound acceptance test because its old production relationship is absent from current production state.
+- No old Altitude relationship was fabricated or reconstructed.
+- The final acceptance campaign is the fresh production Residential cleaning path: production user -> cleaning job -> provider -> outreach record -> real AgentMail send -> persisted identifiers -> real provider reply -> signed webhook -> production thread mapping -> inbound record -> UI -> interpretation/comparison.
+
+OWNER UAT BOUNDARY:
+
+- `MANUAL_UAT.md` is marked `UAT READY = YES`.
+- Owner manual UAT must begin only after director review.
+- `UAT PASS` is not claimed. No provider email, follow-up, clarification, booking, payment, quote acceptance, social post, or hackathon submission occurred.
+
+## Owner-UAT auth remediation and automated production verification — 2026-09-14
+
+STATUS: **AUTH UNIQUENESS = PASS; AUTH UX = PASS; PRODUCTION FIX = PASS; OWNER UAT = STILL PAUSED.**
+
+ROOT CAUSE AND SCOPE:
+
+- Convex Auth remains the only identity authority. No second application password or user system was added.
+- The installed Password provider keyed accounts by the raw email string. The fix applies trim + lowercase normalization only; Gmail dot/plus rewriting is intentionally not performed.
+- The pinned Convex Auth release returned InvalidSecret/InvalidAccountId tokens that became a generic server error in the provider action. The compatibility wrapper preserves the official Password provider's hashing, account, and session machinery and converts only those expected credential tokens into safe ConvexError data.
+- Duplicate signup in the normal UI now checks the Convex Auth users table by normalized email, switches directly to Sign in, retains the email, and does not create a second identity.
+
+THIRTEEN-GATE EVIDENCE:
+
+1. Auth implementation diagnosed from installed Convex Auth source: PASS; raw email keying, duplicate behavior, Convex Auth users table, and InvalidSecret server-error path were verified.
+2. Convex Auth identity authority preserved: PASS; no parallel users/password table was introduced.
+3. Minimum email normalization: PASS; trim + lowercase only, with Gmail dot/plus forms preserved.
+4. Explicit duplicate signup safety: PASS; normalized duplicate signup showed the existing-account message and switched to Sign in without a second identity.
+5. Duplicate email retention: PASS; the case/whitespace variant remained in the form for sign-in.
+6. Fresh-account persistence: PASS; a fresh ordinary account created a generic job brief, sign-out/sign-in restored the same job, and refresh preserved it.
+7. Wrong-password UX: PASS after the final production redeploy; the UI showed exactly “Email or password is incorrect.” and did not show InvalidSecret.
+8. Short-password UX: PASS; the UI showed exactly “Password must be at least 8 characters.” and did not show Invalid password or raw backend details.
+9. Sign-up/sign-in distinction and loading controls: PASS in source and production normal-UI flow; labels are Creating account… and Signing in…, with submit disabled during work.
+10. Invalid/temporary error safety: PASS for the covered invalid-credential and short-password paths; unknown failures remain on the generic retry-safe message.
+11. Tenant isolation: PASS in production automated UI; User B saw only its private job and not User A's job, and User A saw its own job and not User B's job.
+12. Verification and deployment: PASS; typecheck, 13 automated tests across 3 files, lint, build, production backend deployment, and static publish all passed.
+13. Production health and release boundary: PASS for automated verification; Convex insights reported no issues over 72 hours. Owner manual UAT remains paused, UAT PASS is not claimed, and no email/provider/reply action occurred in this package.
+
+AUTOMATED PRODUCTION EVIDENCE (credentials and secret values intentionally omitted):
+
+- Fresh account/job/brief: Kane session 6f607309-3cb3-419e-ae71-b39ed3bd189b, evidence pack bccc7ec8-f1ea-4567-a469-788c2937c603.
+- Sign-in persistence, refresh, duplicate normalization, retained email, and re-login: session 81d1cb5d-d5c2-4906-9e0d-215bbb7e2271, evidence pack a5b79a8f-b722-403a-8203-ea848335300e.
+- Final wrong-password production check after the wrapper deploy: session 3b9bcb2a-5173-449c-8051-016c5ba64a82, evidence pack 00dcbe70-c8ee-49ff-b30f-c23b7dfd472a.
+- Final short-password production check: session fe96bd9f-0096-4e6f-a153-86e502b3dc31, evidence pack 424b5686-20a4-4c86-a285-80f02b5842d7.
+- Two-user production tenant isolation: session 0488a59d-271c-4d09-9778-e374d4a0492b, evidence pack da5a0f9d-fb9e-42ab-8642-6058cf57cfa5.
+- Production target: laudable-fly-396; frontend https://laudable-fly-396.convex.site; Convex insights: no issues over the last 72 hours.
+
+BOUNDARY:
+
+- UAT READY = YES for director review of the automated remediation; UAT PASS = NO until the owner performs manual UAT.
+- Do not resume owner manual UAT in this package. Do not send any email or begin provider/reply work.
+- Day 2 remains BUILDING / WAITING_FOR_EXTERNAL_REPLY; no genuine external provider reply is fabricated or claimed.
+
+## Director-authorized mandate autonomy implementation — 2026-09-14
+
+STATUS: IMPLEMENTATION VERIFIED LOCALLY; PRODUCTION DEPLOYMENT PASS; OWNER UAT STILL PAUSED.
+
+Authorization scope: implement the future mandate-triggered real AgentMail path, but do not run it in this work package. No provider email, clarification, follow-up, booking, payment, quote acceptance, or other external commitment was initiated.
+
+Architecture and safety evidence:
+
+- New generic intake persists normalized country, country code, region, city, optional locality/postal code, and a category-neutral Job Brief. Exact street address is not required for initial research.
+- Approving the brief creates an explicit per-job operating mandate with a provider cap clamped to 1–5, a selection preference, initial-outreach permission, routine-clarification permission, and a maximum of one follow-up.
+- Only a job with that explicit mandate can enter startFindingOptions. The action performs the existing bounded Firecrawl search/contact path, retains source evidence, queues only source-backed public-email candidates, then calls the bounded internal send batch.
+- Historical jobs and outreach records without the optional mandate remain inert-safe. The legacy manual approval/send path is rejected for mandate jobs, and a re-run of autonomous queueing is idempotent.
+- Initial send claims are atomic. A record is persisted as sent only after a non-empty AgentMail message_id and thread_id are returned. Failed external attempts remain failed with no success identifiers.
+- Routine clarification automation is limited to attributes classified as availability, timing, materials, disposal, included/excluded items, warranty, tax, or similar ordinary non-binding facts. Price, quote, estimate, address/location, scope, payment/deposit, contract, hire, booking, negotiation, or other ambiguous attributes patch the job to needs_user and emit autonomous_action_blocked.
+- Pause, cancel, complete, tenant, ownership, active-operation, provider-evidence, and public-email checks are enforced server-side. Inbound clarification creation is deduped by job and attribute.
+- A bounded follow-up creation/send action and one-record cap are implemented. Automatic scheduling from the initial receipt is intentionally not wired in this implementation pass because the current work package must remain inert and must not create a near-term external action. This is an explicit remaining implementation gap, not a claim of live follow-up capability.
+
+Local evidence:
+
+- npm run typecheck: PASS.
+- npm test -- --run: PASS, 21 tests across 4 files.
+- Production frontend build: PASS.
+- Changed-file ESLint: PASS with zero warnings; the repository-wide command is slow/silent on this Windows workspace, so the changed-file result is the auditable lint result.
+- git diff --check: PASS.
+- Secret-like scan excluding dependencies, generated code, build output, and Git metadata: zero matches. Integration names were checked without printing values.
+- No current job was started through the new UI action. No real Firecrawl or AgentMail call was made during this implementation work package.
+- Production deploy completed to laudable-fly-396. The public convex.site smoke check returned HTTP 200 HTML, contained the React root, and had no localhost or secret-shaped content.
+
+Production/deployment boundary:
+
+- Target: production Convex deployment laudable-fly-396; public frontend https://laudable-fly-396.convex.site.
+- Deployment and read-only public smoke check completed. Do not run owner manual UAT, click Start finding options, or create a real autonomous campaign.
+- OPENAI_API_KEY remains optional and is not a release or hackathon blocker.
+- UAT PASS, RELEASE READY, SUBMISSION READY, and FINISHED are not claimed. Director review remains required before the first real autonomous campaign.
+
+## Director-authorized follow-up scheduling completion — 2026-09-14
+
+STATUS: AUTONOMY IMPLEMENTATION = PASS; PRODUCTION DEPLOYMENT PASS; OWNER UAT READY = YES; OWNER UAT PASS = NO.
+
+The previously disclosed gap is closed using Convex's built-in scheduled-function primitives (`ctx.scheduler.runAfter` for the post-commit trigger and `ctx.scheduler.runAt` for the 24-hour callback). No second queue, worker, VPS, Redis service, workflow engine, or orchestration system was introduced.
+
+Lifecycle and safety evidence:
+
+- The initial AgentMail action still requires the existing authenticated mandate path. It must receive non-empty `message_id` and `thread_id`; the `markSent` mutation persists those identifiers and the sent state first.
+- Only after that successful `markSent` transaction commits does Convex enqueue the internal scheduling trigger. That trigger re-reads the current parent outreach/job/thread state and creates one 24-hour scheduled callback only when the mandate enables follow-up, the cap is positive, the job is active, the initial receipt is present, and no provider reply is already mapped.
+- The 24-hour delay is centralized in `convex/autonomy.ts` as `FOLLOW_UP_DELAY_MS`; there is no cadence editor or scattered delay value.
+- Durable parent state records scheduling, due, skipped, cancelled, sent, and failed outcomes, the next due time, the follow-up record identity, the scheduled-function identity, and any follow-up failure reason. The child outreach record carries its own approved/sending/sent/failed state and parent link.
+- The callback rechecks job status, active operation, mandate enablement, follow-up permission/cap, structured location, parent sent state, external thread identity, existing child record, and provider reply state immediately before creation and again before the external send claim.
+- A provider reply resolves the callback to no send. Pause, cancel, complete, revocation, pending human-decision state, an existing child, duplicate callback, retry, or a second claim cannot create a second external follow-up. Cancel and complete also cancel pending scheduled functions where possible; correctness still relies on the callback recheck.
+- Follow-up failures are marked FAILED/needs_user with no success identifiers. A failed or unclaimed race is not reported as sent.
+- Historical jobs and records without the explicit mandate are not eligible. No retroactive schedules are created for old sends.
+
+Deterministic evidence:
+
+- `npm run typecheck`: PASS.
+- `npm test -- --run`: PASS, 23 tests across 4 files.
+- Strict changed-file ESLint: PASS with zero warnings.
+- `npm run build`: PASS.
+- `git diff --check`: PASS.
+- Strict secret-value pattern scan: zero matches; no secret values were printed or written.
+- Read-only production eligibility audit before deployment: 15 jobs, 0 mandate-enabled jobs, 0 confirmed initial sends, 0 newly eligible follow-ups, and 0 pending follow-up states.
+
+Production evidence:
+
+- Convex backend deployed successfully to `laudable-fly-396` (`https://laudable-fly-396.convex.cloud`) with schema validation passing.
+- Production frontend published successfully at `https://laudable-fly-396.convex.site`.
+- Public smoke check: HTTP 200, HTML root present, no localhost reference, no secret-shaped content.
+- Post-backend and post-frontend production schedule audits: 0 scheduled functions and 0 `sendScheduledFollowUp` schedules. Deployment generated no schedule for an old record.
+- No real Firecrawl discovery, AgentMail initial send, AgentMail follow-up, provider reply, clarification, booking, payment, quote acceptance, social publication, or hackathon submission occurred in this work package.
+
+Boundary:
+
+- Do not click `Start finding options`, start a campaign, send Tidy Hands or any other provider email, or begin owner manual UAT in this package.
+- Owner UAT is READY for director review of the deployed implementation, not PASS. Day 2 remains waiting for a genuine external provider reply. The active server-only OpenAI interpreter has a bounded synthetic connectivity proof; genuine provider-reply UAT remains owner-controlled.
+- Remaining owner-UAT work is the authorized live production campaign and genuine external reply/webhook journey, subject to fresh director approval at the external-communication boundary.
+## Former provider-reply prototype - superseded 2026-09-15
+
+STATUS: SUPERSEDED by the official OpenAI Responses API implementation on 2026-09-21.
+
+The earlier provider-reply prototype used a different model adapter and is retained in this dated log only as historical context. It is not part of the active runtime, production configuration, dependency graph, or frontend bundle.
+
+CURRENT TRUTH:
+
+- Active interpreter: convex/openaiProviderReply.ts and convex/providerReplyInterpreter.ts.
+- Active runtime consumer: the inbound provider-reply action path.
+- Active model key: OPENAI_API_KEY, server-only.
+- Failure behavior: needs_review with no external commitment.
+- Current validation: strict schema contract suite and a bounded synthetic connectivity proof.
+- Genuine provider reply UAT: pending owner-controlled production UAT.
+- No provider text, job, provider, Firecrawl, AgentMail, recovery, or production contact was used by the synthetic proof.
+
+This historical entry is superseded. Do not use it as current architecture or release evidence.
+
+## Generic provider-entity quality gate correction — 2026-09-15
+
+PROVIDER QUALITY GATE = PASS after correction. AUTONOMOUS OUTREACH SAFETY = PASS for new eligibility decisions. OWNER UAT = PAUSED.
+
+Historical owner-UAT truth, read from production before repair:
+
+- Production deployment: laudable-fly-396.
+- Job: residential cleaning in Oshodi Road, Lagos, Nigeria; status was reply_received; active operation was empty; approved provider cap was 3.
+- The job had 5 retained candidate records and 3 initial outreach records.
+- Real recipients and states were: support@viscorner.com SENT, info@cleanly.ng SENT, and info@neatflow.ng SENT.
+- All three historical records had real external message and thread identifiers and one send attempt.
+- CLEANLY was contacted. VisCorner and NeatFlow were also contacted. QMclean was not contacted. No cancellation, follow-up, or corrective external message was sent.
+- This history was not deleted, rewritten, or manually repaired.
+
+Root cause:
+
+- The prior generic filter combined a small host denylist with loose page-copy signals such as service/contact language.
+- It did not distinguish a source page that discussed many providers from the specific provider entity Findor intended to hire.
+- Email extraction accepted a public email found on any retained source page; source-backed email evidence was treated as sufficient without proving that the source page represented the provider entity.
+- The autonomous queue selected email_found records within the cap without an entity-role gate, so the cap was effectively filled by invalid source pages.
+
+Correction:
+
+- Added a generic provider-quality classifier with provider and discovery_source entity roles.
+- Discovery-source signals cover directories, marketplaces, comparison and aggregator pages, listicles, best/list-of company pages, calculator/content pages, article/blog/news paths, professional-registration and multiple-quote language, and similar source structure.
+- Known marketplace/list/article/calculator hosts remain only as an additional defense; the primary decision is based on generic source structure and page intent.
+- Search results retain source evidence but discovery_source records cannot enter provider options or automated contact discovery.
+- New candidates only receive email_found when they classify as provider entities and their retrieved public email is grounded in provider evidence.
+- Legacy obvious discovery hosts are quarantined at read-time and send-time without mutating the historical records.
+- Manual approval and autonomous queue/send paths now require provider-entity status plus source-backed public business email evidence.
+- The frontend keeps discovery sources separate from hireable provider cards and explains that they are retained as evidence, not provider options.
+- The mandate rail now derives completion from persisted brief/mandate approval state and shows the five-step contract: Describe the service; Review the brief; Approve Findor's mandate; Findor finds and contacts providers; Review replies and options.
+
+Regression evidence:
+
+- Official provider-owned page survives.
+- Provider-owned public business email survives.
+- VisCorner-like marketplace support email is rejected.
+- NeatFlow-like listicle/article is rejected.
+- TrustAm-like calculator/content page is rejected.
+- Generic article/blog path is discovery-only.
+- A third-party discovery source cannot satisfy autonomous eligibility without provider-entity resolution.
+- A maxProviders value of 3 does not force three sends; one valid provider produces at most one queued outreach.
+- Website-only providers remain unsent.
+- Persisted mandate approval marks the rail step complete.
+- npm run typecheck: PASS.
+- npm run lint: PASS with zero warnings.
+- npm test -- --run: PASS, 36 tests across 5 files.
+- npm run build: PASS.
+- git diff --check: PASS.
+- Secret-shaped scan: zero matches.
+
+Production evidence:
+
+- Backend deployed successfully to https://laudable-fly-396.convex.cloud.
+- Frontend deployed successfully to https://laudable-fly-396.convex.site.
+- Public smoke: HTTP 200, React root present, corrected mandate/provider/discovery-source copy present, no secret-shaped frontend content.
+- Post-deploy read-only inspection confirmed the owner-UAT job remains reply_received with 3 historical outreach records and no active operation.
+- The owner-UAT job has zero related scheduled callbacks. Global scheduled-function count was 7 for unrelated existing records.
+- No new campaign was started. No Firecrawl request, AgentMail request, provider message, cancellation, follow-up, or other external commitment occurred during the correction or verification.
+
+Boundary:
+
+- The historical send defect is disclosed and preserved.
+- Do not mark OWNER UAT PASS.
+- Do not start another real campaign or send any provider message until director review decides whether to create a fresh UAT request.
+
+## Bounded non-response recovery — 2026-09-15
+
+Authorized implementation and production deployment completed for a future recovery path. New mandate-approved jobs opt in once; historical jobs, including the current Reis/CLEANLY campaign, remain opt-out unless separately enabled by the owner.
+
+- Recovery can proceed only after `no_response` or `delivery_failed`, while the approved provider cap has unused capacity, no eligible uncontacted retained provider remains, the job is active, and the mandate still permits autonomous research/contact.
+- At most one recovery discovery cycle is persisted per job. Recovery research reuses the address-redacted `buildResearchQuery(job)` and the existing bounded same-origin contact lookup; no exact address or private contact data is added.
+- Recovery candidates pass the same generic provider-entity, relevance, and source-backed public-email gate as the initial path. Website-only, phone-only, marketplace, and directory records cannot enter automated email outreach.
+- Recovery sends are queued behind an owner-scoped claim and the existing AgentMail receipt gate. No receipt is persisted before successful external acceptance; failed sends become `send_failed`/`needs_user`.
+- The UI now distinguishes provider state such as Waiting for reply, Provider replied, No response, Delivery failed, and Needs your review.
+- Deterministic recovery decision tests pass. This implementation/deployment turn made no Firecrawl request, AgentMail request, provider contact, follow-up, or external commitment.
+
+Implementation status: PASS. Live recovery execution: NOT RUN. Owner UAT: PAUSED.
+
+## Decline recovery correction — 2026-09-16
+
+Director-authorized correction deployed to production. A genuine provider decline is now persisted as the terminal state for that provider, cancels any still-pending follow-up for that provider, and evaluates unused approved provider capacity. When another usable provider response exists, the decline path can still select the next eligible already-discovered provider; when none exists, it can schedule only the existing one-cycle bounded recovery search. The declining provider remains deduplicated and cannot be selected again automatically. Existing pause, cancel, complete, needs-user, owner/job authorization, provider-quality, cap, and one-cycle guards remain in place.
+
+- Deterministic recovery coverage: 13 tests in `tests/recovery.test.ts`, including genuine decline persistence, duplicate interpretation idempotency, no follow-up after decline, existing-provider replacement, bounded recovery search, cap exhaustion, declined-provider deduplication, and paused/cancelled/completed/needs-user blocking.
+- Local verification: `npm run typecheck` PASS; `npm run lint` PASS; `npm run test` PASS (57 tests across 6 files); `npm run build` PASS; `git diff --check` PASS; secret-pattern scan PASS with no reported matches.
+- Production backend deployed to `laudable-fly-396` (`https://laudable-fly-396.convex.cloud`) with schema validation and function bundling successful. The frontend was not changed in this backend-only correction; read-only HTTP smoke remained 200 for both the public `convex.site` frontend and Convex backend endpoint.
+- Read-only production verification of the historical job found: status `outreach_sent`; recovery disabled; recovery cycles absent; no active operation; 7 provider-candidate records; 2 initial outreach records; 0 follow-up children; 0 provider-resolution fields; 0 recovery events; 0 recovery-enabled production jobs. The precise outreach-ID scheduler join found the existing 4 follow-up scheduler records for the two historical outreach IDs (two scheduling callbacks plus two follow-up-send callbacks), with 2 persisted follow-up schedule fields and 0 final-response/recovery callbacks; this matches the pre-deploy campaign shape and was not changed. Global scheduled-function count was 11.
+- No Firecrawl request, AgentMail request, provider contact, follow-up, recovery callback, new campaign, or other external commitment occurred during implementation, deployment, or verification. The Reis/CLEANLY campaign was not opted into or mutated.
+
+DECLINE RESOLUTION = PASS
+RECOVERY AUTONOMY = PASS
+CURRENT CAMPAIGN UNCHANGED = PASS
+OWNER UAT = PAUSED
+
+## Bounded non-response recovery — 2026-09-15
+
+Authorized implementation and production deployment completed for a future recovery path. New mandate-approved jobs opt in once; historical jobs, including the current Reis/CLEANLY campaign, remain opt-out unless separately enabled by the owner.
+
+- Recovery can proceed only after `no_response` or `delivery_failed`, while the approved provider cap has unused capacity, no eligible uncontacted retained provider remains, the job is active, and the mandate still permits autonomous research/contact.
+- At most one recovery discovery cycle is persisted per job. Recovery research reuses the address-redacted `buildResearchQuery(job)` and the existing bounded same-origin contact lookup; no exact address or private contact data is added.
+- Recovery candidates pass the same generic provider-entity, relevance, and source-backed public-email gate as the initial path. Website-only, phone-only, marketplace, and directory records cannot enter automated email outreach.
+- Recovery sends are queued behind an owner-scoped claim and the existing AgentMail receipt gate. No receipt is persisted before successful external acceptance; failed sends become `send_failed`/`needs_user`.
+- The UI now distinguishes provider state such as Waiting for reply, Provider replied, No response, Delivery failed, and Needs your review.
+- Deterministic recovery decision tests pass. This implementation/deployment turn made no Firecrawl request, AgentMail request, provider contact, follow-up, or external commitment.
+
+Implementation status: PASS. Live recovery execution: NOT RUN. Owner UAT: PAUSED.

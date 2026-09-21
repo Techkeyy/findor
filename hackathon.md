@@ -1,97 +1,97 @@
-Last updated: 2026-09-13 UTC
+# Convex All Gas Hackathon Log
 
-# Hackathon log
+Last updated: 2026-09-21 UTC
+
+## Project
 
 - **Project:** Findor
-- **Event:** Convex All Gas Hackathon
-- **What it does:** Local-service procurement assistant that turns natural-language service needs into reviewable briefs and prepares evidence-backed provider outreach.
-- **Live app:** not deployed
-- **Repo:** no public remote yet
-- **Frontend:** Convex static hosting
-- **Convex deployment:** https://laudable-fly-396.convex.cloud
-- **Components:** @convex-dev/static-hosting
-- **Convex features:** schema, tables, indexes, queries, mutations, actions, realtime queries
-- **Auth:** Convex Auth
-- **AI models:** none
+- **Event:** [Convex All Gas Hackathon](https://www.convex.dev/hackathons/all-gas)
+- **What it does:** A local-service procurement assistant that turns a natural-language request into a reviewable brief, evidence-backed provider discovery, approved outreach, and truthful recovery state.
+- **Live app:** [laudable-fly-396.convex.site](https://laudable-fly-396.convex.site)
+- **Repository:** [github.com/Techkeyy/findor](https://github.com/Techkeyy/findor)
+- **Backend:** Convex database, auth, queries, mutations, actions, realtime state, scheduling, and static hosting
+- **Sponsors in the runtime:** Convex, Firecrawl, AgentMail, and OpenAI
 - **Started:** 2026-09-12T09:28:47Z
-- **Last updated:** 2026-09-13T01:17:35Z
+- **Current owner state:** UAT paused at the external-action boundary
 
-## Log
+## Official checklist
 
-### 2026-09-12 - working tree
+The official hackathon page describes a public repository, a root hackathon.md, a live public app, real Convex use, real sponsor work where applicable, a social post tagging the participating sponsors, and a submission that includes a repository, live URL, and video under three minutes.
 
-Generalized the first authenticated workflow from a roofing-only intake into one
-generic local-service engine: natural-language request, service category,
-location, timing, structured context, reviewable brief, dynamic provider
-research, and category-neutral outreach draft (convex/schema.ts, convex/jobs.ts,
-convex/providerResearch.ts, convex/outreach.ts, src/App.tsx).
+| Requirement | Current evidence | Status |
+| --- | --- | --- |
+| Started during the eligible build window | Repository log records the first build work on 2026-09-12; the event page lists the kickoff on 2026-08-25 | Confirmed by repo and official page |
+| Public GitHub repository | github.com/Techkeyy/findor is public and uses main | Confirmed |
+| Root hackathon.md | This file is at the repository root | Confirmed |
+| Public Convex site | laudable-fly-396.convex.site returns the live app | Confirmed |
+| Convex backend | Auth, schema, queries, mutations, actions, realtime state, and scheduling are in the runtime | Confirmed by source and deployment |
+| Firecrawl real work | Production discovery and bounded source-page evidence are recorded in the dated history | Confirmed by release evidence |
+| AgentMail real work | Approved outbound receipt persistence and inbound webhook foundations are recorded in the dated history | Confirmed by release evidence |
+| OpenAI real runtime path | Server-only Responses API interpreter is deployed; bounded synthetic connectivity proof passed | Confirmed; genuine provider reply UAT remains pending |
+| Social post and sponsor tags | No public post is claimed in this repository | Owner action required |
+| Video under three minutes | No placeholder or fabricated link is claimed | Owner action required |
+| VibeApps or final submission | Not claimed | Owner action required |
 
-Configured the required Convex Auth signing pair on the dev deployment without
-recording its values. An initial real browser run passed ordinary sign-up,
-generic job creation, brief approval, and provider-research readiness. The
-director-approved Firecrawl control was exercised before the integration
-configuration was complete and stopped truthfully; no provider result was
-fabricated or saved. Added an atomic send-claim state before the AgentMail
-action so a double-click cannot create parallel initial sends. The later real
-Firecrawl discovery rerun and its no-contactable-provider boundary are recorded
-below; AgentMail delivery remains unclaimed.
-The real Firecrawl discovery path was then rerun through the normal Findor UI
-using the approved bounded Austin roof-replacement campaign. Generic
-source-quality filtering retained two relevant provider pages, Aurum Roofing
-and Altitude Roofing, with source evidence shown in the UI. Both were
-truthfully classified as website-only because no public business email was
-supported by retrieved evidence. No provider was approved, no draft was
-created,
-and no AgentMail call or external email was attempted. Day 1 remains unpassed.
-### 2026-09-13 - working tree
+## Build history
 
-Director-reviewed live evidence now covers the generic Moving flow through real
-Firecrawl Search and bounded same-domain Map/Scrape. The standardized brief
-handled Moving-specific requirements through generic fields, and the UI kept
-source URLs and truthful website-only contactability visible. The deployed run
-also exposed two generic provider-quality false positives—a publisher page and
-a comparison marketplace—so a host-level provider-source correction was staged
-in `convex/providerResearch.ts`; deployment and the corrected rerun are still
-pending explicit deployment authorization. A bounded roofing contact check also
-recovered an accepted source-backed public business route for Altitude Roofing,
-with no unnecessary personal details copied into this public log. No provider
-approval, outreach draft send, AgentMail call, message identifier, or external
-receipt is claimed. Day 1 remains incomplete.
-The later normal UI review also approved the evidence-backed Altitude Roofing candidate and persisted an unsent plain-text draft; the send boundary was not crossed. Source-backed checks confirm owner authorization, website-only blocking, authenticated send entry, and the atomic sending claim. A fresh unauthenticated UI showed no outreach controls.
+### 2026-09-12: generic product foundation
 
-The post-deployment Moving verification also passed the generic filter correction: the personal development deployment was updated, Forbes and HireAHelper disappeared, three legitimate moving businesses remained with source evidence, and bounded contact discovery stayed truthful with no public email routes and three unresolved providers. AgentMail send remained blocked at the direct-authorization boundary; no external receipt or identifier is claimed. Day 1 remains incomplete.
+Findor was generalized from a narrow service flow into a category-neutral local-service engine. The authenticated workflow captures a natural-language request, service category, structured location, timing, budget, a reviewable brief, dynamic provider research, source evidence, and an outreach draft.
 
-## 2026-09-13 — Day 1 final external-send verification
+The first real Firecrawl checks were intentionally bounded. When the integration or contactability evidence was insufficient, the product stopped without fabricating a provider or an email route. Website-only candidates stayed website-only. The first real provider-search run also exposed the need for generic source-quality filtering rather than trusting publisher or comparison pages.
 
-The director-authorized outreach approval boundary was completed through the normal authenticated Findor UI. Exactly one real AgentMail send was initiated for the accepted provider; Findor showed the external send as accepted, received non-empty external identifiers, and persisted the truthful sent state only after that external success. A refresh and reopen preserved the sent state and message details without another send. No credentials, secrets, private addresses, personal employee contact data, or external identifiers are recorded in this public-safe log. Day 1 is PASS for the verified chain, and work stops here for director review; no Day 2 external or irreversible action was started.
-Scope note: the exact-one-send authorization intentionally did not permit duplicate-send or failed-external-send fault injection; those live negative scenarios remain unexecuted, and no claim about them is made here.
+An atomic send claim was added before the AgentMail action so a repeated click cannot create parallel initial sends.
 
-### 2026-09-13 - working tree
+### 2026-09-13: real discovery, approval, and outbound evidence
 
-Added the generic inbound-reply foundation: a signed Convex HTTP Action for AgentMail message.received, identity-checked full-message retrieval, thread-first routing, duplicate protection, unmatched-event quarantine, attachment metadata, realtime conversation/comparison UI, safe Convex storage retrieval, optional Structured Outputs interpretation, and clarification drafts that never send automatically (convex/http.ts, convex/inbound.ts, convex/inboundParsing.ts, convex/schema.ts, src/App.tsx). Exactly one passive AgentMail webhook is registered for the existing case inbox; no new outbound message was created. Deployment, unsigned-request rejection, and the passive external-thread check were real; the deterministic local safety suite passed 9 tests. No provider reply has arrived yet, so this milestone remains waiting for external input rather than claiming a live inbound PASS.
+The moving-service verification covered real Firecrawl search, bounded same-domain inspection, source URLs, contactability classification, and generic filtering. A correction removed publisher and comparison-marketplace false positives from the retained provider set.
 
-### 2026-09-13 - working tree
+The approved outreach boundary was exercised once through the normal authenticated UI. Findor showed the external AgentMail send as accepted and persisted the receipt only after the external success. Refresh and reopen preserved the sent state. No duplicate-send or failed-external-send fault injection was performed, so those live negative scenarios are not claimed.
 
-Added owner-controlled pause, resume, cancel, and completion states with server-side ownership checks, auditable events, and active-operation locks for provider search, bounded contact discovery, and outreach send (convex/schema.ts, convex/jobs.ts, convex/providerResearch.ts, convex/outreach.ts). The UI now explains paused and closed requests, blocks send controls outside the explicit approval state, and lets a user start a new request after completion or cancellation (src/App.tsx, src/index.css).
+The inbound foundation was then added: signed webhook handling, identity-checked message retrieval, thread-first routing, duplicate protection, unmatched-event quarantine, attachment metadata, and safe clarification drafts that never send automatically. No provider reply was fabricated.
 
-Local evidence is green: typecheck, lint, production frontend build, and 11 deterministic Convex safety tests pass across two test files. The dev push was attempted twice but the Convex authorization/network fetch timed out before deployment; the public app remains not deployed. The optional OpenAI interpreter is not treated as a release gate. No new external email, reply, credential, or private application record is claimed in this milestone.
-### 2026-09-13 — production release package
+### 2026-09-13: production release package
 
-The authorized production release package completed. The public frontend is live at
-https://laudable-fly-396.convex.site and the public source repository is
-https://github.com/Techkeyy/findor. Production environment names were verified
-without exposing values. Exactly one enabled AgentMail message.received webhook
-was migrated to the production endpoint without leaving duplicates, and an
-unsigned production webhook POST returned 401. Fresh public-UI UAT covered
-authenticated generic Moving intake, a real Firecrawl search, bounded contact
-discovery, source-backed public-email evidence, truthful non-email blocking, and
-pause/resume/cancel recovery controls. The cancellation UAT required an
-in-product confirmation boundary, which was deployed and then passed end to end.
+The authorized production package deployed the public Convex site and verified the production environment names without exposing values. A single production AgentMail webhook was migrated without duplicates, and an unsigned webhook request was rejected.
 
-The final staged-tree scan found zero secret/private-pattern matches, zero local
-development URL matches, zero staged environment files other than the
-name-only .env.example, and no local builder metadata. Local typecheck, lint,
-11 deterministic tests, and production build all passed. No new provider email,
-follow-up, clarification, booking, payment, quote acceptance, social post, or
-hackathon submission occurred. Day 2 remains waiting for a genuine external
-provider reply; no reply is fabricated or claimed. Stop here for director review.
+Fresh public UI verification covered authenticated generic intake, real discovery, bounded contact discovery, source-backed email evidence, non-email blocking, and pause, resume, and cancel controls. No new provider email, follow-up, clarification, booking, payment, quote acceptance, social post, or submission was claimed in this package.
+
+### 2026-09-14: autonomy and recovery safeguards
+
+The mandate-triggered autonomy boundary was implemented as an inert-capable production path. A job brief stores the approved provider cap and permissions for source-backed initial outreach, routine non-binding clarification, and at most one follow-up. Historical jobs without that mandate remain inert.
+
+Follow-up scheduling was completed with a post-commit trigger, fresh state checks, ownership checks, cap enforcement, revocation checks, and durable planned, due, skipped, cancelled, sent, and failed outcomes. Recovery work preserves prior outreach history, reuses address-redacted research, applies generic provider-quality gates, and records truthful no-response or delivery-failure state.
+
+No real Firecrawl search, AgentMail send, follow-up, provider reply, owner UAT, social post, or submission was performed during these implementation packages.
+
+### 2026-09-15: bounded non-response recovery
+
+The once-per-job recovery path was implemented and deployed for new mandate-approved campaigns. It runs only after an eligible no-response or delivery-failed state, within the approved provider cap, with no eligible retained provider left, and with an active mandate. The original campaign history is not opted in or mutated.
+
+### 2026-09-21: OpenAI provider-reply interpreter
+
+The active reply interpreter was moved to the official OpenAI JavaScript SDK and Responses API. Provider text remains untrusted data. Strict JSON Schema output is validated again by Findor before persistence. The interpreter is server-only, uses an explicit model, disables Responses storage, has no model fallback, and fails closed on missing configuration, timeout, API error, refusal, rate limit, or malformed output.
+
+The contract suite covers normal quotes, declines, acknowledgements, ambiguity, exact-address questions, deposits, prompt injection, malformed output, unavailable OpenAI, and unchanged human-stop policy. A bounded synthetic connectivity call returned structured quote facts without touching a job, provider, Firecrawl, AgentMail, recovery, or live database record. No genuine provider reply has been used as UAT evidence.
+
+## Current architecture evidence
+
+- **Convex:** source of truth for schema, auth, ownership, realtime project state, outreach ledger, inbound transitions, recovery cycles, audit events, and scheduling.
+- **Firecrawl:** server-side provider discovery and bounded source inspection; evidence is retained and provider quality is filtered before approval.
+- **AgentMail:** approved outbound email, external receipt persistence, signed inbound webhook handling, and thread-aware message routing.
+- **OpenAI:** server-only provider-reply interpretation into strict structured facts. Invalid or unsafe results become review state.
+- **Frontend:** React and Vite static site with explicit state copy, no raw timing enum presentation, and active Findor logo and favicon assets.
+
+## Final release posture
+
+- Final automated suite: 206 tests across 11 files; typecheck, lint, production build, bundle assertion, and whitespace validation pass.
+- Production code and assets have been audited for raw user-facing enum leaks, provider-specific runtime hardcoding, development URLs, secret-shaped values, retired-model runtime consumers, and unused old image assets.
+- Generic authored examples use US-first neutral values. User-entered country, location, budget, currency, and provider data remain untouched.
+- Local forensic exports and generated audit artifacts are ignored and are not part of the public repository.
+- The public-safe Director handoff keeps the workflow contract and release decisions without owner identifiers, production record IDs, provider email addresses, or local filesystem paths.
+- Owner UAT remains paused. No new provider contact or provider follow-up is part of this audit.
+- Social publication, the short demo, and the final submission remain owner actions and are not implied by this log.
+
+## Evidence boundary
+
+This file distinguishes confirmed repository and deployment evidence from owner-controlled submission work. It does not claim universal provider coverage, a genuine provider reply, a social post, a video, or a completed hackathon submission until those artifacts exist and are linked by the owner.

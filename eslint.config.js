@@ -9,9 +9,14 @@ import convexPlugin from "@convex-dev/eslint-plugin";
 export default defineConfig([
   {
     ignores: [
-      "dist",
+      "dist/**",
+      "scratch/**",
+      ".agents/**",
+      "node_modules/**",
+      ".git/**",
       "eslint.config.js",
-      "convex/_generated",
+      "convex/_generated/**",
+      "convex/*.config.ts",
       "postcss.config.js",
       "tailwind.config.js",
       "vite.config.ts",
@@ -22,7 +27,7 @@ export default defineConfig([
       js.configs.recommended,
       ...tseslint.configs.recommendedTypeChecked,
     ],
-    files: ["**/*.{ts,tsx}"],
+    files: ["src/**/*.{ts,tsx}", "convex/**/*.{ts,tsx}", "tests/**/*.{ts,tsx}"],
     languageOptions: {
       ecmaVersion: 2020,
       globals: {
@@ -31,11 +36,11 @@ export default defineConfig([
       },
       parserOptions: {
         project: [
-          "./tsconfig.node.json",
           "./tsconfig.app.json",
-          "./convex/tsconfig.json",
+          "./tsconfig.node.json",
           "./tsconfig.tests.json",
         ],
+        tsconfigRootDir: import.meta.dirname,
       },
     },
     plugins: {
@@ -77,5 +82,19 @@ export default defineConfig([
       "@typescript-eslint/require-await": "off",
     },
   },
-  ...convexPlugin.configs.recommended,
+  {
+    files: ["convex/**/*.ts"],
+    plugins: {
+      "@convex-dev": convexPlugin,
+    },
+    rules: {
+      "@convex-dev/import-wrong-runtime": "off",
+      "@convex-dev/no-old-registered-function-syntax": "error",
+      "@convex-dev/require-args-validator": "error",
+      "@convex-dev/explicit-table-ids": "error",
+      "@convex-dev/no-filter-in-query": "warn",
+      "@convex-dev/no-top-of-hour-crons": "warn",
+      "@convex-dev/no-schema-import-cycle": "error",
+    },
+  },
 ]);

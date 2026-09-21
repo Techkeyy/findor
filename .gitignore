@@ -26,3 +26,6 @@ Thumbs.db
 # Local builder metadata
 .agents/
 .claude/
+
+# Local forensic exports, screenshots, and generated audit artifacts
+scratch/

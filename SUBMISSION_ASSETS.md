@@ -26,7 +26,7 @@ Convex is the authenticated state and control plane: schema, indexed queries, mu
 - Failed sends remain failed and receive no success identifiers.
 - Signed inbound routing with quarantine for unknown threads.
 - Untrusted attachments are never executed.
-- Optional OpenAI interpretation fails safely when unavailable and is not a release gate.
+- The server-only OpenAI interpretation path fails safely when unavailable; genuine provider-reply UAT remains owner-controlled.
 
 ## Links to fill after review
 
@@ -41,4 +41,3 @@ Public build log: hackathon.md
 Findor turns an unclear local-service need into a clear brief, source-linked provider evidence, and a user-approved outreach draft. Built with Convex for authenticated realtime state, durable approval boundaries, external actions, and signed inbound routing. No inferred emails, no automatic hiring, and no silent sends.
 
 #Convex #BuildInPublic #LocalServices
-

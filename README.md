@@ -1,100 +1,139 @@
 # Findor
 
-Findor is a local-service procurement assistant. It turns an unclear service need into a structured brief, lets the user review what is known and unknown, researches relevant public provider evidence, and prepares non-binding outreach only after explicit approval.
+Evidence-backed local-service procurement with explicit approval and truthful external state.
 
-Findor is a generic local-service workflow. Moving, roofing, cleaning, electrical, plumbing, HVAC, landscaping, painting, and other categories use the same intake, brief, evidence, approval, and communication model. Category-specific details are represented as structured requirements rather than separate category pages.
+**Try the live app:** [Findor on Convex](https://laudable-fly-396.convex.site)
 
-## Product journey
+**Demo video:** Pending owner publication. There is no placeholder video link.
 
-1. A signed-in user describes the service, location, timing, and context in ordinary language.
-2. Findor validates required information and prepares a standardized Job Brief.
-3. The user reviews and approves the brief before any external research begins.
-4. Findor runs bounded public-web discovery and stores source URLs and evidence for relevant providers.
-5. Public contactability remains truthful: a provider needs retrieved evidence that explicitly publishes a business email before it can enter the automated email path. Website-only and phone-only providers remain blocked.
-6. The user approves a provider and reviews a non-binding outreach draft.
-7. The user explicitly approves the send action. Only then may the real AgentMail action run.
-8. Findor persists external identifiers only after a successful external response and displays the resulting state.
-9. Signed inbound events are routed by inbox and thread identity. Original messages remain visible, and structured comparison is an interpretation layer rather than a replacement for source text.
+**Sponsor stack:** Convex, Firecrawl, AgentMail, and OpenAI are used in the runtime.
 
-Findor never accepts a quote, hires a provider, signs a contract, commits payment, or changes scope on the user's behalf.
+## What Findor does
 
-## Current release state
+Findor turns a local service request into a controlled procurement workflow:
 
-Day 1 is accepted as PASS for the verified real discovery-to-AgentMail-send chain. Day 2 implementation is present and remains WAITING_FOR_EXTERNAL_REPLY until a genuine provider reply is received and processed through the deployed webhook. Day 3 local recovery/control UX is implemented and locally verified.
+1. Capture the brief, location, timing, and budget.
+2. Discover local providers with source evidence.
+3. Separate eligible, contactable, and rejected candidates.
+4. Let the user approve the exact providers and message before outreach.
+5. Send through AgentMail only after approval and persist the external receipt.
+6. Receive and quarantine inbound messages, then interpret provider replies into structured facts.
+7. Keep failures, retries, recovery rounds, and next actions visible.
 
-The Convex backend and static frontend are deployed to production deployment laudable-fly-396. The public app is available at https://laudable-fly-396.convex.site. Production environment names are configured for the existing integrations and Convex Auth without exposing their values. The single AgentMail message.received webhook is migrated to the production endpoint and verified without duplicate subscriptions. Production UAT covers fresh authenticated Moving intake, real Firecrawl discovery and bounded contactability, truthful email/source evidence, and recovery controls. The reviewed public repository is available at https://github.com/Techkeyy/findor. The final secret scan passed before push, and the public release package is ready for director review. Social publication and hackathon submission remain outside scope.
+The product is designed for real-world ambiguity. A provider can be discovered but not contactable. A send can fail. A reply can be incomplete. Those states remain explicit instead of becoming a green success badge.
 
-The optional OpenAI provider-response interpreter has truthful fail-safe behavior when unavailable. OPENAI_API_KEY is not a release or hackathon gate and is not required for this README or release status.
+## Why it exists
+
+Finding a local provider is easy to prototype and hard to make trustworthy. Search results can be aggregators, a website can lack a usable email route, and an outbound email can fail after the UI has changed. Findor focuses on the boundary between discovery and action: evidence, user approval, durable state, and honest recovery.
+
+## Try a representative journey
+
+A user can request a leaking pipe repair in Camden Town, London, review the source-backed candidates, approve a message, and see whether the approved outreach was accepted, failed, or awaiting a reply. The same structured location model supports places such as Brooklyn, New York and Lagos, Nigeria without replacing user-entered values with a default country.
+
+The current release includes production evidence for real discovery and AgentMail outreach. OpenAI provider-reply interpretation is wired as a server-only, fail-closed path and has a bounded connectivity proof. A genuine provider reply interpreted through the live path remains owner-controlled UAT.
+
+## Human control and safety
+
+- The user controls the brief, provider selection, and final send approval.
+- Website-only and phone-only candidates do not become fabricated email recipients.
+- Provider identities are evidence-backed and generic. There is no provider-specific production shortcut.
+- Tenant authorization is checked on protected data and transitions.
+- Inbound messages are verified, deduplicated, quarantined when needed, and linked to the right outreach record.
+- Recovery does not silently rewrite the original outreach history.
+- User-entered locations, budgets, currencies, and provider data are preserved.
+
 ## Architecture
 
-- React, TypeScript, and Vite provide the web UI.
-- Convex Auth provides password sign-up and sign-in.
-- Convex stores jobs, structured briefs, provider candidates, source evidence, outreach drafts, external receipts, inbound messages, attachments, provider responses, clarifications, and auditable events.
-- Convex queries and realtime subscriptions keep the private workspace current.
-- Convex mutations enforce ownership, approval boundaries, recovery controls, and post-send persistence rules.
-- Convex actions perform external Firecrawl, AgentMail, storage, and optional OpenAI work; external results are persisted only through internal mutations.
-- Firecrawl is used for bounded public provider discovery and same-domain contact-page checks.
-- AgentMail is used only for user-approved outbound outreach and inbound webhook delivery.
-- Convex file storage can retain inbound attachments for safe user retrieval; attachments are treated as untrusted files.
-- The generic Job Brief stores raw context, labeled structured requirements, and explicit unknowns so the schema and UI do not drift into category-specific architecture.
+The browser is a React and Vite client. Convex is the application backend and source of truth. Public reads are bounded and authenticated writes flow through typed mutations or actions.
 
-## Safety and truthfulness
+- **Convex database:** jobs, briefs, provider candidates, source evidence, outreach rows, receipts, inbound messages, recovery cycles, and audit events.
+- **Convex auth:** authenticated user identity is derived server-side and ownership is enforced in backend functions.
+- **Convex realtime:** queries drive the project state, outreach ledger, reply timeline, and recovery view.
+- **Convex scheduling and workflows:** delayed follow-up and recovery work use persisted state and idempotent transitions.
+- **Static hosting:** the production frontend is served from the public Convex site.
 
-- Every user-visible job and provider query is scoped to the authenticated owner.
-- Unauthenticated users cannot trigger outreach.
-- A second send claim is rejected while an initial send is in progress.
-- Failed sends are recorded as FAILED and do not receive success identifiers.
-- Message and thread identifiers are written only after AgentMail returns a successful receipt.
-- Inbound webhook signatures are checked before event processing.
-- Full messages are fetched and identity-checked before their content is trusted.
-- Unknown or unmatched inbound threads are quarantined rather than attached to a user's job.
-- Provider emails are never inferred or generated from a domain or provider name.
-- External pages, email bodies, PDFs, and attachments are treated as untrusted data.
-- Pause, resume, cancel, and complete controls are owner-only and auditable. Controls are locked while provider research, contact discovery, or outreach send is in flight.
-- The interface tells the user when an action is paused, closed, sending, failed, or externally accepted.
+### Sponsor integrations
 
-## Configuration
+| Sponsor | Real work in Findor | Boundary |
+| --- | --- | --- |
+| Convex | Database, auth, reactive queries, mutations, actions, scheduling, inbound transitions, and recovery state | Application source of truth |
+| Firecrawl | Server-side local discovery and bounded source-page inspection with evidence retention | Discovery only, never automatic approval |
+| AgentMail | Approved outbound email, external receipt persistence, signed inbound webhook handling, and message threading | External communication after user approval |
+| OpenAI | Server-only Responses API interpreter that converts provider reply text into strict structured facts | Interpretation only, fail-closed on invalid output |
 
-Configure secrets on the Convex deployment rather than committing them. This repository intentionally documents names only:
+## Global location support
 
-- AGENTMAIL_API_KEY
-- AGENTMAIL_INBOX_ID
-- AGENTMAIL_WEBHOOK_SECRET
-- FIRECRAWL_API_KEY
-- OPENAI_API_KEY (optional)
-- OPENAI_MODEL (optional)
-- Convex Auth configuration as required by the deployment
+Findor stores structured country, region, city, locality, postal code, and address context where available. Search and validation use the user's location rather than forcing a US-only assumption. Generic authored examples are US-first for clarity, but real user data remains unchanged. Provider coverage still depends on discovery quality and local business availability.
 
-Never commit .env, .env.local, .env.convex, deployment keys, cookies, or secret values.
-## Local development
+## Tech stack
 
-Prerequisites: Node.js and an authenticated Convex CLI session.
+- React 19 and Vite 8
+- TypeScript 6
+- Convex 1.44 with Convex Auth and static hosting
+- OpenAI SDK 7.20
+- Firecrawl and AgentMail integrations through server-side Convex actions
+- Vitest, ESLint, and production bundle assertions
 
-1. Install dependencies with npm install.
-2. Start the development workflow with npm run dev.
-3. Complete the browser sign-in flow when prompted.
-4. Configure Convex deployment environment names listed above when integrations are in scope.
-5. Push/check backend functions with npx convex dev --once.
-6. Run npm run typecheck.
-7. Run npm run lint.
-8. Run npm run build.
-9. Run npm test -- --run.
+## Repository layout
 
-The deterministic test suite covers parsing and signature verification, prompt-injection-resistant interpretation boundaries, message identity merging, duplicate and unmatched inbound events, unauthenticated and cross-user denial, website-only provider blocking, send-claim idempotency, failed-send state, and job recovery controls.
+- **convex/**: schema, auth, queries, mutations, actions, scheduling, integrations, and backend policy.
+- **src/**: UI, state presentation, formatters, error boundaries, and safe client actions.
+- **tests/**: Convex and UI regression coverage, including auth, outreach safety, recovery, provider quality, and copy guards.
+- **public/**: active Findor logo, favicon, touch icon, and hero image.
+- **scripts/**: release checks and bundle assertions.
+- **hackathon.md**: dated build log and submission-readiness record.
+- **MANUAL_UAT.md** and **PRODUCT_PROMISE_MATRIX.md**: owner-facing verification and contract references.
 
-## Demo and external scope
+## Run locally
 
-The intended demo follows one generic request from intake to brief approval, real provider discovery with visible evidence, provider approval, draft review, explicit send approval, and truthful receipt state. A second segment shows a real inbound reply when one is available; otherwise it is labeled as waiting for external input.
+Prerequisites: Node.js, npm, a Convex project, and the required integration credentials for the path you want to exercise.
 
-The demo does not claim automated hiring, payment, contract execution, quote acceptance, inferred contact details, fabricated provider replies, or fabricated external receipts. The prepared demo script and submission copy are kept in separate working-tree artifacts and are not published or sent automatically.
+    npm install
+    npm run dev
 
-## Evidence and release tracking
+For a backend-only validation, use the Convex CLI with the project configured for your environment.
 
-BUILD_TRACKER.md is the engineering source of truth. hackathon.md is the public-safe build log. The release checklist must distinguish local verification from deployed production evidence.
+Required environment names are documented in **.env.example**:
 
-The public Convex host, production UAT, deployed recovery/control verification, and integration checks are complete for this release package. The Day 2 live-reply gate remains waiting for a genuine provider reply; the optional OpenAI interpreter remains fail-safe and is not a release blocker. Public-repository publication is being completed under the current authorization. Social publication, final hackathon submission, and any new external commitment remain explicitly out of scope.
+- **CONVEX_DEPLOYMENT** or the standard Convex project configuration
+- **FIRECRAWL_API_KEY** for real discovery
+- **AGENTMAIL_API_KEY**, **AGENTMAIL_INBOX_ID**, and **AGENTMAIL_WEBHOOK_SECRET** for email flows
+- **OPENAI_API_KEY** for provider-reply interpretation
 
-No provider, customer, inbox, real email address, message identifier, thread identifier, secret, or personal address is included in this README.
+Do not commit environment files or credentials. The application fails closed when an integration is unavailable.
+
+## Quality gates
+
+The release gates are:
+
+    npm test
+    npm run typecheck
+    npm run lint
+    npm run build:prod
+    npm run assert-bundle
+    git diff --check
+
+The final audit also scans tracked files and the production bundle for secret-shaped values, development URLs, raw enum labels, provider-specific runtime hardcoding, retired-model consumers, and emoji or long-dash regressions in authored frontend copy.
+
+The current automated suite passes 206 tests across 11 files. The production build and bundle assertion pass against the production Convex host.
+
+## Production deployment
+
+Production deployment is intentionally explicit:
+
+    npm run deploy:prod
+
+The deploy command publishes the current frontend and Convex functions through the configured production target. No provider outreach, Firecrawl search, AgentMail send, or real provider-reply processing is part of a release deployment.
+
+## Current release constraints
+
+- Owner UAT is paused at the external-action boundary.
+- No new provider contacts are authorized as part of this repository audit.
+- The current public app and repository are real release artifacts, but a short demo, social post, and final hackathon submission still require owner action.
+- Provider coverage is evidence-backed rather than universal.
+
+See [hackathon.md](hackathon.md) for the dated build record and [DIRECTOR.md](DIRECTOR.md) for the public-safe release handoff.
+
 ## License
 
-This project is licensed under the terms in LICENSE.txt.
+Findor is released under the Apache License 2.0. See [LICENSE.txt](LICENSE.txt).
