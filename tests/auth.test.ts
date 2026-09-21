@@ -59,7 +59,7 @@ describe("password identity normalization", () => {
     const signUpResult = await t.action(api.auth.signIn, {
       params: {
         flow: "signUp",
-        email: "IszeeKills@Gmail.com ",
+        email: "Fixture.Owner@Example.com ",
         password: "secretPassword123",
       },
       provider: "password",
@@ -71,27 +71,27 @@ describe("password identity normalization", () => {
     const user = await t.run(async (ctx) => {
       const u = await ctx.db
         .query("users")
-        .withIndex("email", (q) => q.eq("email", "iszeekills@gmail.com"))
+        .withIndex("email", (q) => q.eq("email", "fixture.owner@example.com"))
         .unique();
       const a = await ctx.db
         .query("authAccounts")
         .withIndex("providerAndAccountId", (q) =>
-          q.eq("provider", "password").eq("providerAccountId", "iszeekills@gmail.com"),
+          q.eq("provider", "password").eq("providerAccountId", "fixture.owner@example.com"),
         )
         .unique();
       return { user: u, account: a };
     });
 
     expect(user.user).not.toBeNull();
-    expect(user.user?.email).toBe("iszeekills@gmail.com");
+    expect(user.user?.email).toBe("fixture.owner@example.com");
     expect(user.account).not.toBeNull();
-    expect(user.account?.providerAccountId).toBe("iszeekills@gmail.com");
+    expect(user.account?.providerAccountId).toBe("fixture.owner@example.com");
 
     // Sign in with exact email
     const signInResult1 = await t.action(api.auth.signIn, {
       params: {
         flow: "signIn",
-        email: "iszeekills@gmail.com",
+        email: "fixture.owner@example.com",
         password: "secretPassword123",
       },
       provider: "password",
@@ -102,7 +102,7 @@ describe("password identity normalization", () => {
     const signInResult2 = await t.action(api.auth.signIn, {
       params: {
         flow: "signIn",
-        email: "ISZEEKILLS@GMAIL.COM",
+        email: "FIXTURE.OWNER@EXAMPLE.COM",
         password: "secretPassword123",
       },
       provider: "password",
@@ -113,7 +113,7 @@ describe("password identity normalization", () => {
     const signInResult3 = await t.action(api.auth.signIn, {
       params: {
         flow: "signIn",
-        email: "   iszeekills@gmail.com   ",
+        email: "   fixture.owner@example.com   ",
         password: "secretPassword123",
       },
       provider: "password",
@@ -125,7 +125,7 @@ describe("password identity normalization", () => {
       t.action(api.auth.signIn, {
         params: {
           flow: "signIn",
-          email: "iszeekills@gmail.com",
+          email: "fixture.owner@example.com",
           password: "wrongPassword999",
         },
         provider: "password",
@@ -192,7 +192,7 @@ describe("password identity normalization", () => {
       t.action(api.auth.signIn, {
         params: {
           flow: "reset",
-          email: "  ISZEEKILLS@GMAIL.COM  ",
+          email: "  FIXTURE.OWNER@EXAMPLE.COM  ",
         },
         provider: "password",
       }),
@@ -211,7 +211,7 @@ describe("password identity normalization", () => {
       t.action(api.auth.signIn, {
         params: {
           flow: "reset-verification",
-          email: "iszeekills@gmail.com",
+          email: "fixture.owner@example.com",
           code: validCode,
           newPassword: "short",
         },
@@ -224,7 +224,7 @@ describe("password identity normalization", () => {
       t.action(api.auth.signIn, {
         params: {
           flow: "reset-verification",
-          email: "iszeekills@gmail.com",
+          email: "fixture.owner@example.com",
           code: "wrong-code-999",
           newPassword: "brandNewPassword789",
         },
@@ -236,7 +236,7 @@ describe("password identity normalization", () => {
     const resetResult = await t.action(api.auth.signIn, {
       params: {
         flow: "reset-verification",
-        email: "iszeekills@gmail.com",
+        email: "fixture.owner@example.com",
         code: validCode,
         newPassword: "brandNewPassword789",
       },
@@ -280,7 +280,7 @@ describe("password identity normalization", () => {
       t.action(api.auth.signIn, {
         params: {
           flow: "signIn",
-          email: "iszeekills@gmail.com",
+          email: "fixture.owner@example.com",
           password: "secretPassword123",
         },
         provider: "password",
@@ -291,7 +291,7 @@ describe("password identity normalization", () => {
     const newSignIn = await t.action(api.auth.signIn, {
       params: {
         flow: "signIn",
-        email: "  IszeeKills@gmail.com ",
+        email: "  Fixture.Owner@example.com ",
         password: "brandNewPassword789",
       },
       provider: "password",
@@ -381,7 +381,7 @@ describe("central auth error normalization and leakage prevention", () => {
   }
 
   it("correctly masks emails for privacy in success confirmations", () => {
-    expect(maskEmail("iszeekills@gmail.com")).toBe("i***s@gmail.com");
+    expect(maskEmail("fixture.owner@example.com")).toBe("f***r@example.com");
     expect(maskEmail("john.doe@example.com")).toBe("j***e@example.com");
     expect(maskEmail("ab@domain.com")).toBe("a*@domain.com");
     expect(maskEmail("invalid")).toBe("invalid");

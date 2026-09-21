@@ -144,7 +144,7 @@ describe("UI rendering, legacy resilience, and error boundaries", () => {
       {
         _id: "msg_1",
         candidateId: "cand_1",
-        providerEmail: "info@reiscleaners.com.ng",
+        providerEmail: "info@reiscleaners.example.test",
         status: "sent",
         createdAt: 1789481124827,
         updatedAt: 1789481124827,
@@ -236,7 +236,7 @@ describe("UI rendering, legacy resilience, and error boundaries", () => {
       {
         _id: "kd7b2f2d5mn60nymt11nacnatn8een8m",
         candidateId: "cand_reis",
-        providerEmail: "info@reiscleaners.com.ng",
+        providerEmail: "info@reiscleaners.example.test",
         status: "sent",
         purpose: "initial",
         providerResolution: "replied",
@@ -249,7 +249,7 @@ describe("UI rendering, legacy resilience, and error boundaries", () => {
       {
         _id: "msg_cleanly_1",
         candidateId: "cand_cleanly",
-        providerEmail: "contact@cleanly.ng",
+        providerEmail: "contact@cleanly.example.test",
         status: "sent",
         purpose: "initial",
         providerResolution: "no_response",
@@ -265,7 +265,7 @@ describe("UI rendering, legacy resilience, and error boundaries", () => {
         parentOutreachId: "msg_cleanly_1",
         purpose: "follow_up",
         status: "sent",
-        providerEmail: "contact@cleanly.ng",
+        providerEmail: "contact@cleanly.example.test",
         externalMessageId: "msg_cleanly_fu_ext",
         externalThreadId: "thread_cleanly_1",
         createdAt: 1789481200000,
@@ -288,8 +288,8 @@ describe("UI rendering, legacy resilience, and error boundaries", () => {
     expect(html).toContain("Outreach ledger");
     expect(html).toContain("Reis Cleaners");
     expect(html).toContain("Cleanly Nigeria");
-    expect(html).toContain("info@reiscleaners.com.ng");
-    expect(html).toContain("contact@cleanly.ng");
+    expect(html).toContain("info@reiscleaners.example.test");
+    expect(html).toContain("contact@cleanly.example.test");
     expect(html).toContain("Provider replied");
     expect(html).toContain("No response");
     expect(html).toContain("Real AgentMail receipt stored.");
@@ -339,7 +339,7 @@ describe("UI rendering, legacy resilience, and error boundaries", () => {
         jobId: "job_1" as any,
         ownerId: "user_1" as any,
         eventType: "inbound_received" as const,
-        message: "Provider message received from info@reiscleaners.com.ng.",
+        message: "Provider message received from info@reiscleaners.example.test.",
         createdAt: 1789481250000,
       },
     ];
@@ -353,7 +353,7 @@ describe("UI rendering, legacy resilience, and error boundaries", () => {
         candidateId: "cand_reis" as any,
         status: "sent" as const,
         purpose: "initial" as const,
-        providerEmail: "info@reiscleaners.com.ng",
+        providerEmail: "info@reiscleaners.example.test",
         subject: "Cleaning service inquiry",
         body: "Hi Reis Cleaners...",
         createdAt: 1789481124827,
@@ -371,7 +371,7 @@ describe("UI rendering, legacy resilience, and error boundaries", () => {
         url: "https://reiscleaners.com.ng",
         description: "Professional cleaning in Lagos",
         contactability: "email_found" as const,
-        contactEmail: "info@reiscleaners.com.ng",
+        contactEmail: "info@reiscleaners.example.test",
         evidence: [],
         discoveredAt: 1789481110000,
       },
@@ -388,7 +388,7 @@ describe("UI rendering, legacy resilience, and error boundaries", () => {
     expect(html).toContain("Request record");
     expect(html).toContain("What has happened");
     expect(html).toContain("AgentMail accepted outreach to Reis Cleaners.");
-    expect(html).toContain("Provider message received from info@reiscleaners.com.ng.");
+    expect(html).toContain("Provider message received from info@reiscleaners.example.test.");
   });
 
   it("renders CycleHistoryBar cleanly with synthesized legacy Cycle 1", () => {

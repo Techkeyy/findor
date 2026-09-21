@@ -86,11 +86,11 @@ describe("generic provider entity quality", () => {
         url: "https://cleanly.ng/",
         description: "Professional cleaning services.",
         contactability: "email_found",
-        contactEmail: "info@cleanly.ng",
+        contactEmail: "info@cleanly.example.test",
         evidence: [
           {
             sourceUrl: "https://cleanly.ng/",
-            claim: "Public business contact info@cleanly.ng.",
+            claim: "Public business contact info@cleanly.example.test.",
           },
         ],
       }),
@@ -103,11 +103,11 @@ describe("generic provider entity quality", () => {
         url: "https://viscorner.com/cleaning-services/house-cleaning/oshodi-isolo",
         description: "Marketplace for cleaners.",
         contactability: "email_found",
-        contactEmail: "support@viscorner.com",
+        contactEmail: "support@viscorner.example.test",
         evidence: [
           {
             sourceUrl: "https://viscorner.com/cleaning-services/house-cleaning/oshodi-isolo",
-            claim: "Public business contact support@viscorner.com.",
+            claim: "Public business contact support@viscorner.example.test.",
           },
         ],
       }),
@@ -250,11 +250,11 @@ describe("generic provider entity quality", () => {
         description: "A marketplace source.",
         entityType: "discovery_source",
         contactability: "email_found",
-        contactEmail: "support@viscorner.com",
+        contactEmail: "support@viscorner.example.test",
         evidence: [
           {
             sourceUrl: "https://viscorner.com/cleaning-services/lagos",
-            claim: "Public business contact support@viscorner.com.",
+            claim: "Public business contact support@viscorner.example.test.",
           },
         ],
         discoveredAt: now + 2,

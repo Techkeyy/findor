@@ -29,3 +29,14 @@ Thumbs.db
 
 # Local forensic exports, screenshots, and generated audit artifacts
 scratch/
+
+# Private local handoffs and planning notes
+AGENTS.md
+CLAUDE.md
+DIRECTOR.md
+BUILD_TRACKER.md
+PRODUCT_PROMISE_MATRIX.md
+SUBMISSION_ASSETS.md
+MANUAL_UAT.md
+DEMO_SCRIPT.md
+skills-lock.json

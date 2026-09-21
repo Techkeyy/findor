@@ -1370,7 +1370,7 @@ describe("job cycles and procurement iteration", () => {
         entityType: "provider",
         contactability: "email_found",
         url: "https://alphaclean.com",
-        contactEmail: "hello@alphaclean.com",
+        contactEmail: "hello@alphaclean.example.test",
         evidence: [{ claim: "Verified email on website", sourceUrl: "https://alphaclean.com" }],
         discoveredAt: now,
       });
@@ -1382,7 +1382,7 @@ describe("job cycles and procurement iteration", () => {
         entityType: "provider",
         contactability: "email_found",
         url: "https://betaclean.com",
-        contactEmail: "info@betaclean.com",
+        contactEmail: "info@betaclean.example.test",
         evidence: [{ claim: "Verified email on website", sourceUrl: "https://betaclean.com" }],
         discoveredAt: now,
       });
@@ -1394,7 +1394,7 @@ describe("job cycles and procurement iteration", () => {
         entityType: "provider",
         contactability: "email_found",
         url: "https://gammasparkle.com",
-        contactEmail: "contact@gammasparkle.com",
+        contactEmail: "contact@gammasparkle.example.test",
         evidence: [{ claim: "Verified email on website", sourceUrl: "https://gammasparkle.com" }],
         discoveredAt: now,
       });
@@ -1405,7 +1405,7 @@ describe("job cycles and procurement iteration", () => {
         candidateId: cA,
         status: "sent",
         purpose: "initial",
-        providerEmail: "hello@alphaclean.com",
+        providerEmail: "hello@alphaclean.example.test",
         subject: "Deep house clean",
         body: "Inquiry body",
         externalMessageId: "msg_alpha_1",
@@ -1421,7 +1421,7 @@ describe("job cycles and procurement iteration", () => {
         candidateId: cB,
         status: "sent",
         purpose: "initial",
-        providerEmail: "info@betaclean.com",
+        providerEmail: "info@betaclean.example.test",
         subject: "Deep house clean",
         body: "Inquiry body",
         externalMessageId: "msg_beta_1",
@@ -1437,7 +1437,7 @@ describe("job cycles and procurement iteration", () => {
         candidateId: cC,
         status: "sent",
         purpose: "initial",
-        providerEmail: "contact@gammasparkle.com",
+        providerEmail: "contact@gammasparkle.example.test",
         subject: "Deep house clean",
         body: "Inquiry body",
         externalMessageId: "msg_gamma_1",
@@ -1458,7 +1458,7 @@ describe("job cycles and procurement iteration", () => {
         eventId: "evt_alpha",
         externalMessageId: "inbound_msg_alpha",
         threadId: "th_alpha_1",
-        sender: "hello@alphaclean.com",
+        sender: "hello@alphaclean.example.test",
         recipients: ["inbox@agentmail.to"],
         subject: "Re: Deep house clean",
         bodyText: "$180 on Tuesday morning.",
@@ -1545,7 +1545,7 @@ describe("job cycles and procurement iteration", () => {
       const routineMsg = messages.find((m) => m.purpose === "routine_clarification");
       expect(routineMsg).toBeDefined();
       expect(routineMsg?.candidateId).toBe(candAId);
-      expect(routineMsg?.providerEmail).toBe("hello@alphaclean.com");
+      expect(routineMsg?.providerEmail).toBe("hello@alphaclean.example.test");
     });
 
     // 4. TAKE OVER MYSELF: Stops all Findor communication and follow-ups

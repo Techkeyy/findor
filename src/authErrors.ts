@@ -21,7 +21,7 @@ export interface NormalizedAuthError {
 
 /**
  * Masks an email for user-facing success / security confirmations.
- * e.g. "iszeekills@gmail.com" -> "i***s@gmail.com" or "user@domain.com" -> "u***r@domain.com"
+ * e.g. "fixture.owner@example.com" -> "f***r@example.com" or "user@domain.com" -> "u***r@domain.com"
  */
 export function maskEmail(email: string): string {
   const trimmed = email.trim();

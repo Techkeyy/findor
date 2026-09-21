@@ -132,7 +132,7 @@ describe("global location and mandate boundaries", () => {
       {
         _id: "cleanly-outreach",
         candidateId: "cleanly",
-        providerEmail: "info@cleanly.ng",
+        providerEmail: "info@cleanly.example.test",
         status: "sent",
         purpose: "initial",
         externalMessageId: "cleanly-message",
@@ -144,7 +144,7 @@ describe("global location and mandate boundaries", () => {
       {
         _id: "reis-outreach",
         candidateId: "reis",
-        providerEmail: "info@reiscleaners.com.ng",
+        providerEmail: "info@reiscleaners.example.test",
         status: "failed",
         purpose: "initial",
         followUpState: "skipped",
@@ -156,8 +156,8 @@ describe("global location and mandate boundaries", () => {
     const rows = buildOutreachLedgerRows(messages, candidates);
     expect(rows).toHaveLength(2);
     expect(rows.map((row) => [row.providerName, row.contactRoute])).toEqual([
-      ["CLEANLY", "info@cleanly.ng"],
-      ["Reis Cleaners", "info@reiscleaners.com.ng"],
+      ["CLEANLY", "info@cleanly.example.test"],
+      ["Reis Cleaners", "info@reiscleaners.example.test"],
     ]);
     expect(rows.map((row) => [row.sendState, row.followUpState])).toEqual([
       ["Sent", "Planned"],
