@@ -4,7 +4,7 @@ Autonomous local-service procurement with evidence-backed discovery, bounded out
 
 **[Live app](https://laudable-fly-396.convex.site)** · **[Hackathon build log](hackathon.md)** · **Convex All Gas Hackathon**
 
-**Demo video:** Pending owner publication. No placeholder link is claimed.
+**Demo video:** https://youtu.be/yz-MJlzX8-0.
 
 > “Who can actually do this job, what will it cost, and what happens if the first answer never arrives?”
 
