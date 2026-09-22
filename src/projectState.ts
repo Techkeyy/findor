@@ -21,6 +21,7 @@ export type ConsumerProjectState =
 export interface ConsumerStateContext {
   candidates?: Array<{
     _id: Id<"providerCandidates">;
+    cycleId?: Id<"jobCycles">;
     name?: string;
     url?: string;
     description?: string;
@@ -29,7 +30,93 @@ export interface ConsumerStateContext {
     contactEmail?: string;
   }>;
   responses?: Array<Doc<"providerResponses"> | null | undefined>;
-  outreachMessages?: Array<unknown>;
+  outreachMessages?: Array<{
+    _id?: Id<"outreachMessages">;
+    candidateId?: Id<"providerCandidates">;
+    cycleId?: Id<"jobCycles">;
+    status?: string;
+    purpose?: string;
+    providerResolution?: string;
+    sendAttemptCount?: number;
+    lastAttemptAt?: number;
+  }>;
+}
+
+export type NeedsUserOutcome =
+  | "failed_outreach"
+  | "website_only"
+  | "zero_results"
+  | "technical_failure"
+  | "neutral";
+
+function isInitialOutreach(message: { purpose?: string }) {
+  return !message.purpose || message.purpose === "initial";
+}
+
+function isCurrentCycleRecord(
+  record: { cycleId?: Id<"jobCycles"> },
+  currentCycleId?: Id<"jobCycles">,
+) {
+  // Once a job has a persisted current cycle, an unscoped historical record
+  // must not be allowed to define the current cycle's outcome. Legacy jobs
+  // without a current cycle retain their all-history behavior.
+  return currentCycleId ? record.cycleId === currentCycleId : true;
+}
+
+/**
+ * Resolve the consumer-facing needs-user outcome from the active cycle only.
+ * The persisted job stop reason is intentionally a fallback: it can describe
+ * an older cycle and must not override a current website-only or zero-result
+ * outcome.
+ */
+export function resolveNeedsUserOutcome(
+  job: Partial<Doc<"jobs">> | null | undefined,
+  context?: Pick<ConsumerStateContext, "candidates" | "outreachMessages">,
+): NeedsUserOutcome {
+  if (!job || typeof job !== "object") return "neutral";
+
+  const currentCycleId = job.currentCycleId;
+  const candidates = (context?.candidates || []).filter((candidate) =>
+    isCurrentCycleRecord(candidate, currentCycleId),
+  );
+  const messages = (context?.outreachMessages || []).filter(
+    (message) =>
+      isCurrentCycleRecord(message, currentCycleId) &&
+      isInitialOutreach(message),
+  );
+
+  const hasFailedOutbound = messages.some(
+    (message) =>
+      message.status === "failed" &&
+      (message.providerResolution === "send_failed" ||
+        (message.sendAttemptCount ?? 0) > 0 ||
+        message.lastAttemptAt != null),
+  );
+  if (hasFailedOutbound) return "failed_outreach";
+
+  const stopReason = job.autonomyStopReason || "";
+  if (
+    job.status === "failed" ||
+    /could not complete|couldn't finish|technical|search failed/i.test(stopReason)
+  ) {
+    return "technical_failure";
+  }
+
+  const providerCandidates = candidates.filter(
+    (candidate) => candidate.entityType !== "discovery_source",
+  );
+  if (providerCandidates.length > 0) {
+    const hasContactableProvider = providerCandidates.some(
+      (candidate) =>
+        candidate.contactability === "email_found" &&
+        Boolean(candidate.contactEmail?.trim()),
+    );
+    if (!hasContactableProvider) return "website_only";
+  } else if (candidates.length === 0) {
+    return "zero_results";
+  }
+
+  return "neutral";
 }
 
 export function resolveConsumerProjectState(

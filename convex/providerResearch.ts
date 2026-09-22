@@ -1510,24 +1510,30 @@ export const restoreWaitingAfterEmptyRound = internalMutation({
       await ctx.db.patch("jobs", args.jobId, {
         status: "outreach_sent",
         activeOperation: undefined,
+        autonomyStopReason: undefined,
         updatedAt: now,
       });
-    } else if (!hasSent && job.status !== "needs_user" && job.status !== "brief_approved") {
+    } else if (job.status !== "brief_approved") {
+      const neutralReason =
+        "This recovery round found no additional contactable providers. Findor keeps watching for replies.";
+      const shouldRecordEvent = job.status !== "needs_user";
       await ctx.db.patch("jobs", args.jobId, {
         status: "needs_user",
         activeOperation: undefined,
-        autonomyStopReason:
-          "This recovery round found no additional contactable providers. Findor keeps watching for replies.",
+        autonomyStopReason: neutralReason,
         updatedAt: now,
       });
-      await ctx.db.insert("jobEvents", {
-        jobId: args.jobId,
-        ownerId: args.ownerId,
-        eventType: "cycle_exhausted_no_options",
-        message:
-          "Recovery round completed with no additional contactable providers. Findor keeps watching for replies.",
-        createdAt: now,
-      });
+      if (shouldRecordEvent) {
+        await ctx.db.insert("jobEvents", {
+          jobId: args.jobId,
+          ownerId: args.ownerId,
+          cycleId: job.currentCycleId,
+          eventType: "cycle_exhausted_no_options",
+          message:
+            "Recovery round completed with no additional contactable providers. Findor keeps watching for replies.",
+          createdAt: now,
+        });
+      }
     } else if (job.activeOperation) {
       await ctx.db.patch("jobs", args.jobId, {
         activeOperation: undefined,

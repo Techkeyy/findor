@@ -1,7 +1,10 @@
 import { useState } from "react";
 import type { Doc, Id } from "../../convex/_generated/dataModel";
 import { formatEnumLabel, formatTimingLabel } from "../formatters";
-import { resolveConsumerProjectState } from "../projectState";
+import {
+  resolveConsumerProjectState,
+  resolveNeedsUserOutcome,
+} from "../projectState";
 import { normalizeProjectError } from "../projectErrors";
 import {
   countContactedProviders,
@@ -48,6 +51,10 @@ interface OutreachItem {
   providerEmail: string;
   subject: string;
   body: string;
+  providerResolution?: string;
+  failureReason?: string;
+  sendAttemptCount?: number;
+  lastAttemptAt?: number;
 }
 
 interface InboundConversationItem {
@@ -248,9 +255,22 @@ export function ProjectHub({
       ? `${loc.locality ? loc.locality + ", " : ""}${loc.city}, ${loc.country}`
       : job.serviceLocation || "Location unspecified";
 
-  // Filter candidates for display: actual providers vs discovery evidence
-  const actualProviders = candidates.filter((c) => c.entityType === "provider");
-  const discoverySources = candidates.filter((c) => c.entityType === "discovery_source" || !c.entityType);
+  const needsUserOutcome = resolveNeedsUserOutcome(job, {
+    candidates,
+    outreachMessages,
+  });
+  const currentCycleCandidates = job.currentCycleId
+    ? candidates.filter((candidate) => candidate.cycleId === job.currentCycleId)
+    : candidates;
+  const currentCycleMessages = job.currentCycleId
+    ? outreachMessages.filter((message) => message.cycleId === job.currentCycleId)
+    : outreachMessages;
+
+  // Filter candidates for display: actual providers vs discovery evidence. The
+  // outcome view is cycle-scoped so an older cycle cannot supply the provider
+  // card or state for the current attempt.
+  const actualProviders = currentCycleCandidates.filter((c) => c.entityType === "provider");
+  const discoverySources = currentCycleCandidates.filter((c) => c.entityType === "discovery_source" || !c.entityType);
 
   // Truthful contacted-providers count: distinct sent initials across the job.
   const contactedCount = countContactedProviders(outreachMessages);
@@ -334,8 +354,23 @@ export function ProjectHub({
   const selectedDisplay = selectedCandidate
     ? resolveBusinessDisplay(selectedCandidate)
     : null;
-  const providerCardDisplay = actualProviders[0]
-    ? resolveBusinessDisplay(actualProviders[0])
+  const failedCandidateIds = new Set(
+    currentCycleMessages
+      .filter(
+        (message) =>
+          (!message.purpose || message.purpose === "initial") &&
+          message.status === "failed" &&
+          (message.providerResolution === "send_failed" ||
+            (message.sendAttemptCount ?? 0) > 0 ||
+            message.lastAttemptAt != null),
+      )
+      .map((message) => message.candidateId),
+  );
+  const providerCardCandidate =
+    actualProviders.find((candidate) => failedCandidateIds.has(candidate._id)) ??
+    actualProviders[0];
+  const providerCardDisplay = providerCardCandidate
+    ? resolveBusinessDisplay(providerCardCandidate)
     : null;
   const selectedResponse = selectedCandidate
     ? verifiedResponses.find((r) => r.providerId === selectedCandidate._id)
@@ -809,12 +844,20 @@ export function ProjectHub({
                 Needs your decision
               </span>
               <h2 className="text-xl sm:text-2xl font-bold text-gray-900">
-                {candidates.length === 0 && job.autonomyStopReason && !job.autonomyStopReason.includes("No contactable")
-                  ? "Research paused"
-                  : "No contactable providers found"}
+                {needsUserOutcome === "failed_outreach"
+                  ? "Outreach could not be completed"
+                  : needsUserOutcome === "technical_failure"
+                    ? "Research paused"
+                    : "No contactable providers found"}
               </h2>
               <p className="text-sm text-gray-600 leading-relaxed max-w-2xl">
-                {job.autonomyStopReason ? (
+                {needsUserOutcome === "website_only" ? (
+                  actualProviders.length > 0
+                    ? "We found a provider, but couldn't verify a public business email for them. No provider was contacted."
+                    : "No contactable providers were found in this search."
+                ) : needsUserOutcome === "zero_results" ? (
+                  "No contactable providers were found in this search."
+                ) : job.autonomyStopReason ? (
                   job.autonomyStopReason
                 ) : actualProviders.length > 0 ? (
                   `Findor checked ${candidates.length} source${candidates.length === 1 ? "" : "s"} and identified ${actualProviders.length} potential provider${actualProviders.length === 1 ? "" : "s"}, but none published a verified business email address, so nobody was contacted.`
@@ -902,7 +945,7 @@ export function ProjectHub({
               <div className="p-5 rounded-2xl bg-white border border-gray-200 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div className="space-y-1">
                   <h4 className="text-base font-bold text-gray-900">
-                    {providerCardDisplay?.name ?? actualProviders[0].name}
+                    {providerCardDisplay?.name ?? providerCardCandidate?.name}
                   </h4>
                   <p className="text-xs text-gray-500">
                     {job.serviceCategory || "Local service"} · {locationStr}
@@ -913,7 +956,7 @@ export function ProjectHub({
                     </span>
                     <span className="text-gray-500">and</span>
                     <span className="text-stone-500">
-                      {actualProviders[0].contactability === "email_found"
+                      {providerCardCandidate?.contactability === "email_found"
                         ? "Contact verified"
                         : "No verified email found"}
                     </span>

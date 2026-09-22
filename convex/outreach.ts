@@ -251,13 +251,14 @@ export const approveProvider = mutation({
       status: "outreach_approved",
       updatedAt: now,
     });
-    await ctx.db.insert("jobEvents", {
-      jobId: candidate.jobId,
-      ownerId,
-      eventType: "provider_approved",
-      message:
-        "You approved a provider and a draft outreach message is ready to review.",
-      createdAt: now,
+      await ctx.db.insert("jobEvents", {
+        jobId: candidate.jobId,
+        ownerId,
+        cycleId: candidate.cycleId ?? job.currentCycleId,
+        eventType: "provider_approved",
+        message:
+          "You approved a provider and a draft outreach message is ready to review.",
+        createdAt: now,
     });
     return outreachId;
   },
@@ -432,6 +433,7 @@ export const queueAutonomousOutreach = internalMutation({
       await ctx.db.insert("jobEvents", {
         jobId: args.jobId,
         ownerId: args.ownerId,
+        cycleId: job.currentCycleId,
         eventType: "provider_approved",
         message:
           "Findor selected " +
@@ -2522,6 +2524,7 @@ export const markSent = internalMutation({
     await ctx.db.insert("jobEvents", {
       jobId: args.jobId,
       ownerId: args.ownerId,
+      cycleId: message.cycleId,
       eventType: "outreach_sent",
       message:
         "AgentMail accepted outreach to " +
@@ -2608,23 +2611,31 @@ export const markFailed = internalMutation({
       failureReason: args.reason,
       updatedAt: now,
     });
-    await ctx.db.patch("jobs", args.jobId, {
-      status:
-        job.recoveryEnabled && message.purpose === "initial"
-          ? "needs_user"
-          : "outreach_approved",
-      ...(job.recoveryEnabled && message.purpose === "initial"
-        ? {
-            autonomyStopReason:
-              "A recovery provider could not be contacted successfully. Review the failed outbound record before continuing.",
-          }
-        : {}),
-      activeOperation: undefined,
-      updatedAt: now,
-    });
+    const isCurrentCycleFailure =
+      !job.currentCycleId || message.cycleId === job.currentCycleId;
+    if (
+      !(job.recoveryEnabled && message.purpose === "initial") ||
+      isCurrentCycleFailure
+    ) {
+      await ctx.db.patch("jobs", args.jobId, {
+        status:
+          job.recoveryEnabled && message.purpose === "initial"
+            ? "needs_user"
+            : "outreach_approved",
+        ...(job.recoveryEnabled && message.purpose === "initial"
+          ? {
+              autonomyStopReason:
+                "A recovery provider could not be contacted successfully. Review the failed outbound record before continuing.",
+            }
+          : {}),
+        activeOperation: undefined,
+        updatedAt: now,
+      });
+    }
     await ctx.db.insert("jobEvents", {
       jobId: args.jobId,
       ownerId: args.ownerId,
+      cycleId: message.cycleId,
       eventType: "outreach_failed",
       message:
         "AgentMail did not return an external receipt for " +
