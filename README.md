@@ -186,7 +186,3 @@ This publishes the current frontend and Convex functions through the configured 
 ## Hackathon
 
 Findor is built for the [Convex All Gas Hackathon](https://www.convex.dev/hackathons/all-gas). See [hackathon.md](hackathon.md) for the dated evidence log and submission checklist.
-
-## License
-
-Findor is released under the [Apache License 2.0](LICENSE.txt).
