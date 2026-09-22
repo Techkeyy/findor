@@ -6,9 +6,13 @@ Last updated: 2026-09-22 UTC
 
 - **Project:** Findor
 - **Event:** [Convex All Gas Hackathon](https://www.convex.dev/hackathons/all-gas)
+- **What it does:** Turns an unclear local-service request into a reviewable brief, source-backed provider options, approved outreach, and truthful recovery state under human control.
 - **Thesis:** Turn an unclear local-service need into a reviewable brief, source-backed provider options, approved outreach, and truthful recovery state.
 - **Live app:** [laudable-fly-396.convex.site](https://laudable-fly-396.convex.site)
 - **Repository:** [github.com/Techkeyy/findor](https://github.com/Techkeyy/findor)
+- **Stack:** Convex control plane and static hosting, OpenAI Responses API, Firecrawl, and AgentMail.
+- **Demo video:** [https://youtu.be/yz-MJlzX8-0](https://youtu.be/yz-MJlzX8-0) (2:05 / 125 seconds)
+- **Submission:** Submitted to Vibe Apps with the demo video linked above.
 - **Started:** 2026-09-12
 - **Current owner state:** UAT paused at the external-action boundary
 
@@ -35,8 +39,8 @@ The official event requires a public repository, a root hackathon.md, a public a
 | AgentMail integration | Approved outbound receipt persistence and inbound webhook foundations are implemented and have production evidence | Confirmed |
 | OpenAI integration | Server-only Responses API interpreter is deployed; bounded synthetic connectivity proof passed | Confirmed, genuine provider-reply UAT pending |
 | Social post and sponsor tags | No post is claimed in this repository | Owner action required |
-| Video under three minutes | No fabricated or placeholder link is claimed | Owner action required |
-| Final submission | Not claimed | Owner action required |
+| Video under three minutes | [Submitted demo](https://youtu.be/yz-MJlzX8-0), 2:05 / 125 seconds | Confirmed |
+| Final submission | Findor submitted to Vibe Apps with the public repository, live app, and demo linked above | Confirmed |
 
 ## Milestones
 
@@ -68,8 +72,8 @@ A bounded synthetic connectivity call returned structured quote facts without to
 
 The current automated suite passes 206 tests across 11 files. Typecheck, lint, production build, bundle assertion, and whitespace validation pass. The code and public assets have also been checked for raw user-facing enum leaks, provider-specific runtime hardcoding, development URLs, secret-shaped values, retired-model runtime consumers, and stale assets.
 
-No new Firecrawl search, AgentMail send, provider contact, provider follow-up, recovery run, genuine provider-reply processing, social post, or final submission is part of this repository cleanup.
+No new Firecrawl search, AgentMail send, provider contact, provider follow-up, recovery run, genuine provider-reply processing, or social post is part of this repository cleanup. The completed Vibe Apps submission and its submitted demo link are recorded above.
 
 ## Evidence boundary
 
-This log separates confirmed repository and deployment evidence from owner-controlled submission work. It does not claim universal provider coverage, a genuine provider reply, a social post, a demo video, or a completed hackathon submission until those artifacts exist and are linked.
+This log separates confirmed repository, deployment, and Vibe Apps submission evidence from remaining owner-controlled social-post work. It does not claim universal provider coverage, a genuine provider reply, or a social post until those artifacts exist and are linked.
