@@ -1907,12 +1907,12 @@ describe("continuous quote recovery UX", () => {
       }),
     );
     expect(html).toContain("3 providers contacted so far.");
-    expect(html).toContain("0 of 3 quotes received");
+    expect(html).toContain("Quote target: 3. Quotes received: 0 of 3.");
     expect(html).toContain("Change wait time");
     expect(html).toContain("Stop automatic searching");
   });
 
-  it("offers explicit opt-in while auto-search is off", () => {
+  it("shows target, quote, and contact counts with an explicit opt-in while auto-search is off", () => {
     const html = renderToString(
       React.createElement(ProjectHub, {
         job: {
@@ -1933,14 +1933,20 @@ describe("continuous quote recovery UX", () => {
           },
         } as any,
         candidates: [],
-        outreachMessages: sentMessages(3),
+        outreachMessages: sentMessages(1),
         conversations: [],
         events: [],
         ...recoveryHandlers,
       }),
     );
-    expect(html).toContain("3 providers contacted so far.");
-    expect(html).toContain("Keep looking for more options");
+    expect(html).toContain("1 provider contacted so far.");
+    expect(html).toContain("Quote target:");
+    expect(html).toContain("Quotes received:");
+    expect(html).toContain("Providers contacted:");
+    expect(html).toContain(">3</p>");
+    expect(html).toContain(">0<!-- --> of <!-- -->3</p>");
+    expect(html).toContain(">1</p>");
+    expect(html).toContain("Find more options");
     expect(html).not.toContain("Stop automatic searching");
   });
 

@@ -769,7 +769,7 @@ export function ProjectHub({
             <div className="p-4 rounded-xl bg-blue-50/60 border border-blue-200/70 space-y-3">
               <p className="text-xs text-gray-800">
                 <span className="font-bold">
-                  {`${usableCount} of ${quoteTarget} quotes received.`}
+                  {`Quote target: ${quoteTarget}. Quotes received: ${usableCount} of ${quoteTarget}.`}
                 </span>{" "}
                 {targetOpen && recoveryDeadlineText
                   ? `If we still don't have enough quotes, Findor will look for another batch after ${recoveryDeadlineText}.`
@@ -816,7 +816,12 @@ export function ProjectHub({
             </div>
           ) : (
             onSetContinuousRecovery && (
-              <div className="flex flex-wrap items-center gap-2">
+              <div className="p-4 rounded-xl bg-stone-50 border border-stone-200 space-y-3">
+                <div className="space-y-1 text-xs text-gray-800">
+                  <p><span className="font-bold">Quote target: </span>{quoteTarget}</p>
+                  <p><span className="font-bold">Quotes received: </span>{usableCount} of {quoteTarget}</p>
+                  <p><span className="font-bold">Providers contacted: </span>{contactedCount}</p>
+                </div>
                 <button
                   onClick={() => {
                     setDraftQuoteTarget(quoteTarget);
@@ -827,7 +832,7 @@ export function ProjectHub({
                   disabled={isActionLoading}
                   className="px-5 py-2.5 bg-emerald-800 hover:bg-emerald-900 disabled:bg-gray-200 text-white text-xs font-bold rounded-xl shadow-sm transition-all"
                 >
-                  Keep looking for more options
+                  Find more options
                 </button>
               </div>
             )

@@ -2556,6 +2556,8 @@ describe("continuous quote recovery", () => {
     expect(after.cycles).toHaveLength(2);
     expect(after.cycles[0].cycleNumber).toBe(2);
     expect(after.cycles[0].briefVersion).toBe(1);
+    expect(after.cycles[0].maxProviders).toBe(3);
+    expect(after.cycles[0].mandateSnapshot.quoteTarget).toBe(3);
     expect(after.job?.currentCycleId).toBe(after.cycles[0]._id);
     // The callback consumes the old deadline and waits for discovery to
     // persist a successful result before arming another one.
@@ -2586,6 +2588,97 @@ describe("continuous quote recovery", () => {
         .take(5),
     );
     expect(cyclesAfter).toHaveLength(2);
+  });
+
+  it("keeps a target of three open when one contactable provider is sent", async () => {
+    const t = convexTest(schema, modules);
+    const seed = await seedRecoveryJob(t, {
+      status: "outreach_sent",
+      autonomy: { ...RECOVERY_AUTONOMY, quoteTarget: 3 },
+    });
+    await seedSentInitial(t, seed, "only-contactable");
+
+    const result = await t.run(async (ctx) => {
+      const job = await ctx.db.get("jobs", seed.jobId);
+      const outreach = await ctx.db
+        .query("outreachMessages")
+        .withIndex("by_job_and_createdAt", (q) => q.eq("jobId", seed.jobId))
+        .take(20);
+      const counted = await countUsableSameBriefQuotes(ctx, job!);
+      return {
+        quoteTarget: job?.autonomy?.quoteTarget,
+        maxProviders: job?.autonomy?.maxProviders,
+        successfulInitialSends: outreach.filter(
+          (message) => message.purpose === "initial" && message.status === "sent",
+        ).length,
+        validQuotes: counted.count,
+      };
+    });
+
+    expect(result).toEqual({
+      quoteTarget: 3,
+      maxProviders: 3,
+      successfulInitialSends: 1,
+      validQuotes: 0,
+    });
+  });
+
+  it("queues exactly one provider when only one of three candidates is contactable", async () => {
+    const t = convexTest(schema, modules);
+    const seed = await seedRecoveryJob(t, { status: "providers_ready" });
+    await t.run(async (ctx) => {
+      const candidates = [
+        {
+          name: "Verified HVAC Provider",
+          contactability: "email_found" as const,
+          contactEmail: "info@verified-hvac.example.test",
+          evidence: [{ sourceUrl: "https://verified-hvac.example.test", claim: "Public business email info@verified-hvac.example.test" }],
+        },
+        {
+          name: "Website Only HVAC Provider",
+          contactability: "website_only" as const,
+          evidence: [],
+        },
+        {
+          name: "Directory HVAC Listing",
+          contactability: "website_only" as const,
+          entityType: "discovery_source" as const,
+          evidence: [],
+        },
+      ];
+      for (const candidate of candidates) {
+        await ctx.db.insert("providerCandidates", {
+          jobId: seed.jobId,
+          ownerId: seed.owner,
+          cycleId: seed.cycleId,
+          url: `https://${candidate.name.toLowerCase().replace(/ /g, "-")}.example.test/`,
+          description: "HVAC provider serving Lagos, Nigeria.",
+          entityType: candidate.entityType ?? "provider",
+          contactability: candidate.contactability,
+          ...(candidate.contactEmail ? { contactEmail: candidate.contactEmail } : {}),
+          evidence: candidate.evidence,
+          discoveredAt: Date.now(),
+          name: candidate.name,
+        });
+      }
+    });
+
+    const queued = await t.mutation(internal.outreach.queueAutonomousOutreach, {
+      jobId: seed.jobId,
+      ownerId: seed.owner,
+    });
+    expect(queued.queuedCount).toBe(1);
+    expect(queued.emailFoundCount).toBe(1);
+
+    const after = await t.run(async (ctx) =>
+      ctx.db
+        .query("outreachMessages")
+        .withIndex("by_job_and_createdAt", (q) => q.eq("jobId", seed.jobId))
+        .take(20),
+    );
+    expect(after).toHaveLength(1);
+    expect(after[0].status).toBe("approved");
+    expect(after[0].providerEmail).toBe("info@verified-hvac.example.test");
   });
 
   it("clears the scheduler and exposes a truthful retry state on recovery failure", async () => {
